@@ -97,7 +97,7 @@ export default function OwnerMenuPage() {
     const formData = new FormData();
     formData.append("image", file);
 
-    const apiBase = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000";
+    const apiBase = process.env.NEXT_PUBLIC_API_BASE || "https://project-restaurant-search-5.onrender.com";
 
     const res = await fetch(`${apiBase}/api/menu/${menuId}/upload`, {
       method: "POST",
