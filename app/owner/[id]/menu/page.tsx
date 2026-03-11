@@ -1,4 +1,3 @@
-// app/owner/[id]/menu/page.tsx
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
@@ -18,7 +17,11 @@ import {
   Pencil,
   Images,
 } from "lucide-react";
-import { apiFetch } from "@/src/lib/api";
+import {
+  apiFetch,
+  API_BASE,
+  normalizeImageUrl,
+} from "@/src/lib/api";
 import ImageDropUploader from "@/app/components/ImageDropUploader";
 import RequireAuth from "@/app/components/RequireAuth";
 
@@ -79,7 +82,7 @@ export default function OwnerMenuPage() {
     try {
       const res = await apiFetch(`/api/menu/restaurant/${restaurantId}`);
       setItems(res.data || []);
-    } catch (e: unknown) {
+    } catch (e) {
       showMsg(e instanceof Error ? e.message : "โหลดเมนูไม่สำเร็จ");
     } finally {
       setLoadingList(false);
@@ -97,9 +100,7 @@ export default function OwnerMenuPage() {
     const formData = new FormData();
     formData.append("image", file);
 
-    const apiBase = process.env.NEXT_PUBLIC_API_BASE || "https://project-restaurant-search-5.onrender.com";
-
-    const res = await fetch(`${apiBase}/api/menu/${menuId}/upload`, {
+    const res = await fetch(`${API_BASE}/api/menu/${menuId}/upload`, {
       method: "POST",
       headers: token ? { Authorization: `Bearer ${token}` } : {},
       body: formData,
@@ -145,7 +146,7 @@ export default function OwnerMenuPage() {
 
       showMsg("เพิ่มเมนูสำเร็จ", true);
       await load();
-    } catch (e: unknown) {
+    } catch (e) {
       showMsg(e instanceof Error ? e.message : "เพิ่มเมนูไม่สำเร็จ");
     } finally {
       setLoadingAdd(false);
@@ -161,7 +162,7 @@ export default function OwnerMenuPage() {
       setReplacingId(null);
       showMsg("เปลี่ยนรูปเมนูสำเร็จ", true);
       await load();
-    } catch (e: unknown) {
+    } catch (e) {
       showMsg(e instanceof Error ? e.message : "อัปโหลดรูปเมนูไม่สำเร็จ");
     } finally {
       setActioningId(null);
@@ -177,7 +178,7 @@ export default function OwnerMenuPage() {
         method: "PATCH",
       });
       await load();
-    } catch (e: unknown) {
+    } catch (e) {
       showMsg(e instanceof Error ? e.message : "เปลี่ยนสถานะเมนูไม่สำเร็จ");
     } finally {
       setActioningId(null);
@@ -193,7 +194,7 @@ export default function OwnerMenuPage() {
       await apiFetch(`/api/menu/${menuId}`, { method: "DELETE" });
       showMsg("ลบเมนูสำเร็จ", true);
       await load();
-    } catch (e: unknown) {
+    } catch (e) {
       showMsg(e instanceof Error ? e.message : "ลบเมนูไม่สำเร็จ");
     } finally {
       setActioningId(null);
@@ -204,7 +205,6 @@ export default function OwnerMenuPage() {
     <RequireAuth allow={["OWNER"]}>
       <div className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-white">
         <div className="mx-auto max-w-5xl px-4 py-8">
-          {/* Header */}
           <div className="mb-6 rounded-3xl bg-gradient-to-r from-orange-500 to-orange-400 px-6 py-6 text-white shadow-lg">
             <div className="flex flex-col gap-4">
               <div className="flex flex-wrap items-center gap-3 text-sm">
@@ -252,14 +252,15 @@ export default function OwnerMenuPage() {
                   disabled={loadingList}
                   className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-orange-600 shadow-sm transition hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  <RefreshCw className={`h-4 w-4 ${loadingList ? "animate-spin" : ""}`} />
+                  <RefreshCw
+                    className={`h-4 w-4 ${loadingList ? "animate-spin" : ""}`}
+                  />
                   รีเฟรช
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Message */}
           {msg && (
             <div
               className={`mb-5 rounded-2xl border px-4 py-3 text-sm ${
@@ -272,7 +273,6 @@ export default function OwnerMenuPage() {
             </div>
           )}
 
-          {/* Add form */}
           <form
             onSubmit={addMenu}
             className="mb-8 rounded-3xl border border-orange-100 bg-white p-5 shadow-sm"
@@ -347,7 +347,6 @@ export default function OwnerMenuPage() {
             </div>
           </form>
 
-          {/* List header */}
           <div className="mb-4 flex items-center gap-2">
             <Soup className="h-5 w-5 text-orange-500" />
             <h2 className="text-2xl font-bold text-[#1F2937]">
@@ -355,7 +354,6 @@ export default function OwnerMenuPage() {
             </h2>
           </div>
 
-          {/* Loading */}
           {loadingList && (
             <div className="mb-4 flex items-center gap-2 rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm text-gray-500">
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-orange-400 border-t-transparent" />
@@ -363,7 +361,6 @@ export default function OwnerMenuPage() {
             </div>
           )}
 
-          {/* Empty state */}
           {!loadingList && items.length === 0 && (
             <div className="rounded-3xl border border-dashed border-orange-200 bg-white px-6 py-14 text-center">
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-orange-50 text-orange-500">
@@ -378,10 +375,9 @@ export default function OwnerMenuPage() {
             </div>
           )}
 
-          {/* Menu list */}
           <div className="grid gap-4">
             {items.map((m) => {
-              const safeSrc = m.image_url?.trim();
+              const safeSrc = normalizeImageUrl(m.image_url);
               const isActioning = actioningId === m.menu_id;
 
               return (

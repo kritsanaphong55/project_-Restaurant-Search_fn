@@ -1,4 +1,3 @@
-// app/owner/[id]/images/page.tsx
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
@@ -16,7 +15,11 @@ import {
   FileText,
   Eye,
 } from "lucide-react";
-import { apiFetch } from "@/src/lib/api";
+import {
+  apiFetch,
+  API_BASE,
+  normalizeImageUrl,
+} from "@/src/lib/api";
 import ImageDropUploader from "@/app/components/ImageDropUploader";
 import RequireAuth from "@/app/components/RequireAuth";
 
@@ -64,7 +67,7 @@ export default function OwnerImagesPage() {
     try {
       const res = await apiFetch(`/api/restaurants/${restaurantId}/images`);
       setItems(res.data || []);
-    } catch (e: unknown) {
+    } catch (e) {
       setMsg(e instanceof Error ? e.message : "โหลดรูปไม่สำเร็จ");
     } finally {
       setLoadingList(false);
@@ -94,11 +97,8 @@ export default function OwnerImagesPage() {
       formData.append("image", file);
       formData.append("caption", caption);
 
-      const apiBase =
-        process.env.NEXT_PUBLIC_API_BASE || "https://project-restaurant-search-5.onrender.com";
-
       const res = await fetch(
-        `${apiBase}/api/restaurants/${restaurantId}/images/upload`,
+        `${API_BASE}/api/restaurants/${restaurantId}/images/upload`,
         {
           method: "POST",
           headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -117,7 +117,7 @@ export default function OwnerImagesPage() {
       setUploaderKey((k) => k + 1);
       setMsg("อัปโหลดรูปสำเร็จ");
       await load();
-    } catch (e: unknown) {
+    } catch (e) {
       setMsg(e instanceof Error ? e.message : "อัปโหลดรูปไม่สำเร็จ");
     } finally {
       setLoadingUpload(false);
@@ -136,7 +136,7 @@ export default function OwnerImagesPage() {
       });
       setMsg("ลบรูปภาพสำเร็จ");
       await load();
-    } catch (e: unknown) {
+    } catch (e) {
       setMsg(e instanceof Error ? e.message : "ลบรูปไม่สำเร็จ");
     } finally {
       setLoadingList(false);
@@ -147,7 +147,6 @@ export default function OwnerImagesPage() {
     <RequireAuth allow={["OWNER"]}>
       <div className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-white">
         <div className="mx-auto max-w-5xl px-4 py-8">
-          {/* Header */}
           <div className="mb-6 rounded-3xl bg-gradient-to-r from-orange-500 to-orange-400 px-6 py-6 text-white shadow-lg">
             <div className="flex flex-col gap-4">
               <div className="flex flex-wrap items-center gap-3 text-sm">
@@ -204,7 +203,6 @@ export default function OwnerImagesPage() {
             </div>
           </div>
 
-          {/* Message */}
           {msg && (
             <div
               className={`mb-5 rounded-2xl border px-4 py-3 text-sm ${
@@ -217,7 +215,6 @@ export default function OwnerImagesPage() {
             </div>
           )}
 
-          {/* Upload form */}
           <form
             onSubmit={add}
             className="mb-8 rounded-3xl border border-orange-100 bg-white p-5 shadow-sm"
@@ -261,13 +258,11 @@ export default function OwnerImagesPage() {
             </div>
           </form>
 
-          {/* List header */}
           <div className="mb-4 flex items-center gap-2">
             <ImageIcon className="h-5 w-5 text-orange-500" />
             <h2 className="text-2xl font-bold text-[#1F2937]">รูปทั้งหมด</h2>
           </div>
 
-          {/* Loading */}
           {loadingList && (
             <div className="mb-4 flex items-center gap-2 rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm text-gray-500">
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-orange-400 border-t-transparent" />
@@ -275,7 +270,6 @@ export default function OwnerImagesPage() {
             </div>
           )}
 
-          {/* Empty state */}
           {!loadingList && items.length === 0 && (
             <div className="rounded-3xl border border-dashed border-orange-200 bg-white px-6 py-14 text-center">
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-orange-50 text-orange-500">
@@ -290,10 +284,9 @@ export default function OwnerImagesPage() {
             </div>
           )}
 
-          {/* Image grid */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {items.map((img) => {
-              const safeSrc = img.image_url?.trim();
+              const safeSrc = normalizeImageUrl(img.image_url);
 
               return (
                 <div
