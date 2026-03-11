@@ -1,4 +1,8 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "https://project-restaurant-search-5.onrender.com";
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_URL ||
+  "https://project-restaurant-search-5.onrender.com";
+
+export { API_BASE };
 
 export async function apiFetch(path, options = {}) {
   const base = API_BASE.replace(/\/+$/, "");
@@ -9,10 +13,13 @@ export async function apiFetch(path, options = {}) {
     token = localStorage.getItem("token");
   }
 
+  const isFormData =
+    typeof FormData !== "undefined" && options.body instanceof FormData;
+
   const res = await fetch(`${base}${p}`, {
     ...options,
     headers: {
-      "Content-Type": "application/json",
+      ...(isFormData ? {} : { "Content-Type": "application/json" }),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(options.headers || {}),
     },
@@ -26,4 +33,21 @@ export async function apiFetch(path, options = {}) {
   }
 
   return data;
+}
+
+export function normalizeImageUrl(url) {
+  if (!url) return null;
+
+  const trimmed = String(url).trim();
+  if (!trimmed) return null;
+
+  return trimmed
+    .replace(
+      "http://localhost:4000",
+      "https://project-restaurant-search-5.onrender.com"
+    )
+    .replace(
+      "http://project-restaurant-search-5.onrender.com",
+      "https://project-restaurant-search-5.onrender.com"
+    );
 }
