@@ -95,7 +95,7 @@ export default function OwnerImagesPage() {
       formData.append("caption", caption);
 
       const apiBase =
-        process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000";
+        process.env.NEXT_PUBLIC_API_BASE || "https://project-restaurant-search-5.onrender.com";
 
       const res = await fetch(
         `${apiBase}/api/restaurants/${restaurantId}/images/upload`,
