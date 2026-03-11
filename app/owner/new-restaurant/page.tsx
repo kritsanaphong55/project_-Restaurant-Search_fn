@@ -24,6 +24,11 @@ type FoodType = {
   foodtype_name: string;
 };
 
+function toTimeWithSeconds(value: string) {
+  if (!value) return "";
+  return value.length === 5 ? `${value}:00` : value;
+}
+
 export default function NewRestaurantPage() {
   const router = useRouter();
 
@@ -32,8 +37,8 @@ export default function NewRestaurantPage() {
   const [address, setAddress] = useState("");
   const [latitude, setLat] = useState("");
   const [longitude, setLng] = useState("");
-  const [open_time, setOpen] = useState("09:00:00");
-  const [close_time, setClose] = useState("20:00:00");
+  const [open_time, setOpen] = useState("09:00");
+  const [close_time, setClose] = useState("20:00");
   const [price_min, setMin] = useState("0");
   const [price_max, setMax] = useState("0");
   const [foodtypeIds, setFoodtypeIds] = useState<number[]>([]);
@@ -90,8 +95,8 @@ export default function NewRestaurantPage() {
           address,
           latitude: lat,
           longitude: lng,
-          open_time,
-          close_time,
+          open_time: toTimeWithSeconds(open_time),
+          close_time: toTimeWithSeconds(close_time),
           price_min: pMin,
           price_max: pMax,
           foodtype_ids: foodtypeIds,
@@ -115,7 +120,6 @@ export default function NewRestaurantPage() {
     <RequireAuth allow={["OWNER"]}>
       <div className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-white">
         <div className="mx-auto max-w-4xl px-4 py-8">
-          {/* Header */}
           <div className="mb-6 rounded-3xl bg-gradient-to-r from-orange-500 to-orange-400 px-6 py-6 text-white shadow-lg">
             <div className="flex flex-col gap-4">
               <div>
@@ -149,14 +153,12 @@ export default function NewRestaurantPage() {
             </div>
           </div>
 
-          {/* Message */}
           {msg && (
             <div className="mb-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
               {msg}
             </div>
           )}
 
-          {/* Form */}
           <form
             onSubmit={onSubmit}
             className="rounded-3xl border border-orange-100 bg-white p-6 shadow-sm"
@@ -277,24 +279,40 @@ export default function NewRestaurantPage() {
                   <Clock3 className="h-4 w-4 text-orange-400" />
                   เวลาทำการ *
                 </label>
+
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <input
-                    value={open_time}
-                    onChange={(e) => setOpen(e.target.value)}
-                    placeholder="เวลาเปิด เช่น 09:00:00"
-                    required
-                    disabled={loading}
-                    className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-gray-100"
-                  />
-                  <input
-                    value={close_time}
-                    onChange={(e) => setClose(e.target.value)}
-                    placeholder="เวลาปิด เช่น 20:00:00"
-                    required
-                    disabled={loading}
-                    className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-gray-100"
-                  />
+                  <div>
+                    <label className="mb-2 block text-xs font-medium text-gray-500">
+                      เวลาเปิด
+                    </label>
+                    <input
+                      type="time"
+                      value={open_time}
+                      onChange={(e) => setOpen(e.target.value)}
+                      required
+                      disabled={loading}
+                      className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-gray-100"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-xs font-medium text-gray-500">
+                      เวลาปิด
+                    </label>
+                    <input
+                      type="time"
+                      value={close_time}
+                      onChange={(e) => setClose(e.target.value)}
+                      required
+                      disabled={loading}
+                      className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-gray-100"
+                    />
+                  </div>
                 </div>
+
+                <p className="mt-2 text-xs text-gray-500">
+                  เลือกเวลาเปิดและเวลาปิดของร้านจากตัวเลือกเวลา
+                </p>
               </div>
 
               <div>
