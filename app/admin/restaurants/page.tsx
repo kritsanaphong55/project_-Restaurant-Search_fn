@@ -1,4 +1,3 @@
-// app/admin/restaurants/page.tsx
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -74,6 +73,16 @@ type FormState = {
   close_time: string;
 };
 
+function toInputTime(value?: string | null) {
+  if (!value) return "";
+  return String(value).slice(0, 5);
+}
+
+function toTimeWithSeconds(value: string) {
+  if (!value) return "";
+  return value.length === 5 ? `${value}:00` : value;
+}
+
 const defaultForm: FormState = {
   restaurant_name: "",
   address: "",
@@ -85,8 +94,8 @@ const defaultForm: FormState = {
   foodtype_ids: [],
   status: "APPROVED",
   description: "",
-  open_time: "08:00:00",
-  close_time: "22:00:00",
+  open_time: "08:00",
+  close_time: "22:00",
 };
 
 function StatusBadge({ status }: { status: RestaurantStatus }) {
@@ -201,8 +210,8 @@ export default function AdminRestaurantsPage() {
         : [],
       status: r.status || "APPROVED",
       description: r.description || "",
-      open_time: r.open_time || "08:00:00",
-      close_time: r.close_time || "22:00:00",
+      open_time: toInputTime(r.open_time) || "08:00",
+      close_time: toInputTime(r.close_time) || "22:00",
     });
 
     if (typeof window !== "undefined") {
@@ -227,8 +236,8 @@ export default function AdminRestaurantsPage() {
         foodtype_ids: form.foodtype_ids,
         status: form.status,
         description: form.description.trim() || null,
-        open_time: form.open_time,
-        close_time: form.close_time,
+        open_time: toTimeWithSeconds(form.open_time),
+        close_time: toTimeWithSeconds(form.close_time),
       };
 
       if (editingId !== null) {
@@ -292,7 +301,6 @@ export default function AdminRestaurantsPage() {
     <RequireAuth allow={["ADMIN"]}>
       <div className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-white">
         <div className="mx-auto max-w-6xl px-4 py-8">
-          {/* Header */}
           <div className="mb-6 rounded-3xl bg-gradient-to-r from-orange-500 to-orange-400 px-6 py-6 text-white shadow-lg">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex items-start gap-4">
@@ -335,7 +343,6 @@ export default function AdminRestaurantsPage() {
             </div>
           </div>
 
-          {/* Summary */}
           <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <div className="rounded-2xl border border-orange-100 bg-white p-4 shadow-sm">
               <div className="flex items-center gap-3">
@@ -394,7 +401,6 @@ export default function AdminRestaurantsPage() {
             </div>
           </div>
 
-          {/* Message */}
           {msg && (
             <div
               className={`mb-4 rounded-2xl border px-4 py-3 text-sm ${
@@ -407,7 +413,6 @@ export default function AdminRestaurantsPage() {
             </div>
           )}
 
-          {/* Form */}
           <form
             onSubmit={submitForm}
             className="rounded-3xl border border-orange-100 bg-white p-6 shadow-sm"
@@ -505,19 +510,29 @@ export default function AdminRestaurantsPage() {
                 <option value="REJECTED">REJECTED</option>
               </select>
 
-              <input
-                value={form.open_time}
-                onChange={(e) => updateForm("open_time", e.target.value)}
-                placeholder="เวลาเปิด (08:00:00)"
-                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
-              />
+              <div>
+                <label className="mb-2 block text-xs font-medium text-gray-500">
+                  เวลาเปิด
+                </label>
+                <input
+                  type="time"
+                  value={form.open_time}
+                  onChange={(e) => updateForm("open_time", e.target.value)}
+                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
+                />
+              </div>
 
-              <input
-                value={form.close_time}
-                onChange={(e) => updateForm("close_time", e.target.value)}
-                placeholder="เวลาปิด (22:00:00)"
-                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
-              />
+              <div>
+                <label className="mb-2 block text-xs font-medium text-gray-500">
+                  เวลาปิด
+                </label>
+                <input
+                  type="time"
+                  value={form.close_time}
+                  onChange={(e) => updateForm("close_time", e.target.value)}
+                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
+                />
+              </div>
             </div>
 
             <div className="mt-5">
@@ -598,7 +613,6 @@ export default function AdminRestaurantsPage() {
             </div>
           </form>
 
-          {/* Loading list */}
           {loadingList && (
             <div className="mt-5 flex items-center gap-2 rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm text-gray-500">
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-orange-400 border-t-transparent" />
@@ -606,7 +620,6 @@ export default function AdminRestaurantsPage() {
             </div>
           )}
 
-          {/* List */}
           <div className="mt-6 grid gap-5">
             {items.map((r) => (
               <div
