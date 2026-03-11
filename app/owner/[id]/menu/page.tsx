@@ -16,12 +16,10 @@ import {
   Store,
   Pencil,
   Images,
+  Save,
+  X,
 } from "lucide-react";
-import {
-  apiFetch,
-  API_BASE,
-  normalizeImageUrl,
-} from "@/src/lib/api";
+import { apiFetch, API_BASE, normalizeImageUrl } from "@/src/lib/api";
 import ImageDropUploader from "@/app/components/ImageDropUploader";
 import RequireAuth from "@/app/components/RequireAuth";
 
@@ -68,6 +66,11 @@ export default function OwnerMenuPage() {
   const [actioningId, setActioningId] = useState<number | null>(null);
   const [uploaderKey, setUploaderKey] = useState(0);
   const [replacingId, setReplacingId] = useState<number | null>(null);
+
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editMenuName, setEditMenuName] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editPrice, setEditPrice] = useState("0");
 
   const showMsg = (text: string, isSuccess = false) => {
     setSuccess(isSuccess);
@@ -201,6 +204,58 @@ export default function OwnerMenuPage() {
     }
   };
 
+  const startEditMenu = (menu: MenuItem) => {
+    setReplacingId(null);
+    setEditingId(menu.menu_id);
+    setEditMenuName(menu.menu_name || "");
+    setEditDescription(menu.description || "");
+    setEditPrice(String(menu.price ?? 0));
+  };
+
+  const cancelEditMenu = () => {
+    setEditingId(null);
+    setEditMenuName("");
+    setEditDescription("");
+    setEditPrice("0");
+  };
+
+  const saveEditMenu = async (menuId: number) => {
+    if (actioningId !== null) return;
+
+    const trimmedName = editMenuName.trim();
+    const priceNum = Number(editPrice);
+
+    if (!trimmedName) {
+      showMsg("กรุณากรอกชื่อเมนู");
+      return;
+    }
+
+    if (!Number.isFinite(priceNum) || priceNum < 0) {
+      showMsg("ราคาต้องเป็นตัวเลขที่ไม่ติดลบ");
+      return;
+    }
+
+    setActioningId(menuId);
+    try {
+      await apiFetch(`/api/menu/${menuId}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          menu_name: trimmedName,
+          description: editDescription.trim() || null,
+          price: priceNum,
+        }),
+      });
+
+      showMsg("แก้ไขข้อมูลเมนูสำเร็จ", true);
+      cancelEditMenu();
+      await load();
+    } catch (e) {
+      showMsg(e instanceof Error ? e.message : "แก้ไขข้อมูลเมนูไม่สำเร็จ");
+    } finally {
+      setActioningId(null);
+    }
+  };
+
   return (
     <RequireAuth allow={["OWNER"]}>
       <div className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-white">
@@ -237,9 +292,7 @@ export default function OwnerMenuPage() {
                     <h1 className="text-3xl font-bold leading-tight">
                       จัดการเมนู
                     </h1>
-                    <p className="mt-1 text-sm text-orange-50">
-                      ร้าน #{restaurantId}
-                    </p>
+                    <p className="mt-1 text-sm text-orange-50">ร้าน #{restaurantId}</p>
                     <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs text-white/90">
                       <Store className="h-3.5 w-3.5" />
                       เพิ่ม ลบ และอัปเดตสถานะเมนูอาหาร
@@ -349,9 +402,7 @@ export default function OwnerMenuPage() {
 
           <div className="mb-4 flex items-center gap-2">
             <Soup className="h-5 w-5 text-orange-500" />
-            <h2 className="text-2xl font-bold text-[#1F2937]">
-              รายการเมนูทั้งหมด
-            </h2>
+            <h2 className="text-2xl font-bold text-[#1F2937]">รายการเมนูทั้งหมด</h2>
           </div>
 
           {loadingList && (
@@ -366,9 +417,7 @@ export default function OwnerMenuPage() {
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-orange-50 text-orange-500">
                 <Soup className="h-8 w-8" />
               </div>
-              <h2 className="text-lg font-semibold text-[#1F2937]">
-                ยังไม่มีเมนู
-              </h2>
+              <h2 className="text-lg font-semibold text-[#1F2937]">ยังไม่มีเมนู</h2>
               <p className="mt-2 text-sm text-gray-500">
                 เพิ่มเมนูแรกของร้านได้จากฟอร์มด้านบน
               </p>
@@ -379,6 +428,7 @@ export default function OwnerMenuPage() {
             {items.map((m) => {
               const safeSrc = normalizeImageUrl(m.image_url);
               const isActioning = actioningId === m.menu_id;
+              const isEditing = editingId === m.menu_id;
 
               return (
                 <div
@@ -407,13 +457,59 @@ export default function OwnerMenuPage() {
 
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-start justify-between gap-3">
-                        <div>
-                          <h3 className="text-lg font-bold text-[#1F2937]">
-                            {m.menu_name}
-                          </h3>
-                          <p className="mt-1 text-sm text-gray-500">
-                            {m.description || "-"}
-                          </p>
+                        <div className="min-w-0 flex-1">
+                          {!isEditing ? (
+                            <>
+                              <h3 className="text-lg font-bold text-[#1F2937]">
+                                {m.menu_name}
+                              </h3>
+                              <p className="mt-1 text-sm text-gray-500">
+                                {m.description || "-"}
+                              </p>
+                            </>
+                          ) : (
+                            <div className="rounded-2xl border border-orange-100 bg-orange-50/50 p-4">
+                              <div className="grid gap-3">
+                                <div>
+                                  <label className="mb-1 block text-sm font-medium text-gray-700">
+                                    ชื่อเมนู
+                                  </label>
+                                  <input
+                                    value={editMenuName}
+                                    onChange={(e) => setEditMenuName(e.target.value)}
+                                    disabled={isActioning}
+                                    className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
+                                  />
+                                </div>
+
+                                <div>
+                                  <label className="mb-1 block text-sm font-medium text-gray-700">
+                                    รายละเอียด
+                                  </label>
+                                  <input
+                                    value={editDescription}
+                                    onChange={(e) => setEditDescription(e.target.value)}
+                                    disabled={isActioning}
+                                    className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
+                                  />
+                                </div>
+
+                                <div>
+                                  <label className="mb-1 block text-sm font-medium text-gray-700">
+                                    ราคา (บาท)
+                                  </label>
+                                  <input
+                                    type="number"
+                                    min={0}
+                                    value={editPrice}
+                                    onChange={(e) => setEditPrice(e.target.value)}
+                                    disabled={isActioning}
+                                    className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </div>
 
                         <span
@@ -427,10 +523,12 @@ export default function OwnerMenuPage() {
                         </span>
                       </div>
 
-                      <div className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-orange-600">
-                        <Wallet className="h-4 w-4" />
-                        {m.price} บาท
-                      </div>
+                      {!isEditing && (
+                        <div className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-orange-600">
+                          <Wallet className="h-4 w-4" />
+                          {m.price} บาท
+                        </div>
+                      )}
 
                       {replacingId === m.menu_id && (
                         <div className="mt-4 rounded-2xl border border-orange-100 bg-orange-50/50 p-4">
@@ -456,56 +554,92 @@ export default function OwnerMenuPage() {
                       )}
 
                       <div className="mt-4 flex flex-wrap gap-2">
-                        <button
-                          type="button"
-                          onClick={() => void toggleAvailable(m.menu_id)}
-                          disabled={actioningId !== null}
-                          className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition ${
-                            actioningId !== null
-                              ? "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400"
-                              : "border-gray-200 bg-white text-gray-700 hover:border-orange-300 hover:text-orange-600"
-                          }`}
-                        >
-                          {m.is_available ? (
-                            <PackageX className="h-4 w-4" />
-                          ) : (
-                            <PackageCheck className="h-4 w-4" />
-                          )}
+                        {!isEditing ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => void toggleAvailable(m.menu_id)}
+                              disabled={actioningId !== null}
+                              className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition ${
+                                actioningId !== null
+                                  ? "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400"
+                                  : "border-gray-200 bg-white text-gray-700 hover:border-orange-300 hover:text-orange-600"
+                              }`}
+                            >
+                              {m.is_available ? (
+                                <PackageX className="h-4 w-4" />
+                              ) : (
+                                <PackageCheck className="h-4 w-4" />
+                              )}
 
-                          {isActioning
-                            ? "กำลังดำเนินการ..."
-                            : m.is_available
-                            ? "ตั้งเป็นหมด"
-                            : "มีขายอีกครั้ง"}
-                        </button>
+                              {isActioning
+                                ? "กำลังดำเนินการ..."
+                                : m.is_available
+                                ? "ตั้งเป็นหมด"
+                                : "มีขายอีกครั้ง"}
+                            </button>
 
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setReplacingId(
-                              replacingId === m.menu_id ? null : m.menu_id
-                            )
-                          }
-                          disabled={actioningId !== null}
-                          className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:border-orange-300 hover:text-orange-600 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
-                        >
-                          <Pencil className="h-4 w-4" />
-                          เปลี่ยนรูป
-                        </button>
+                            <button
+                              type="button"
+                              onClick={() => startEditMenu(m)}
+                              disabled={actioningId !== null}
+                              className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:border-orange-300 hover:text-orange-600 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
+                            >
+                              <Pencil className="h-4 w-4" />
+                              แก้ไขข้อมูล
+                            </button>
 
-                        <button
-                          type="button"
-                          onClick={() => void removeMenu(m.menu_id)}
-                          disabled={actioningId !== null}
-                          className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition ${
-                            actioningId !== null
-                              ? "cursor-not-allowed border-red-100 bg-red-50 text-red-300"
-                              : "border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
-                          }`}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          ลบเมนู
-                        </button>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setReplacingId(
+                                  replacingId === m.menu_id ? null : m.menu_id
+                                )
+                              }
+                              disabled={actioningId !== null}
+                              className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:border-orange-300 hover:text-orange-600 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
+                            >
+                              <Pencil className="h-4 w-4" />
+                              เปลี่ยนรูป
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => void removeMenu(m.menu_id)}
+                              disabled={actioningId !== null}
+                              className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition ${
+                                actioningId !== null
+                                  ? "cursor-not-allowed border-red-100 bg-red-50 text-red-300"
+                                  : "border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
+                              }`}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              ลบเมนู
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => void saveEditMenu(m.menu_id)}
+                              disabled={isActioning}
+                              className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-orange-300"
+                            >
+                              <Save className="h-4 w-4" />
+                              {isActioning ? "กำลังบันทึก..." : "บันทึก"}
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={cancelEditMenu}
+                              disabled={isActioning}
+                              className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:border-orange-300 hover:text-orange-600 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
+                            >
+                              <X className="h-4 w-4" />
+                              ยกเลิก
+                            </button>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>
