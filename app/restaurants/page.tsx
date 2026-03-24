@@ -156,7 +156,7 @@ export default function RestaurantsPage() {
                     ค้นหาร้านอาหาร
                   </h1>
                   <p className="mt-1 text-sm text-orange-50">
-                    ค้นหาร้านอาหารในพื้นที่ถนนวลัยลักษณ์
+                   
                   </p>
                   <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs text-white/90">
                     <MapPin className="h-3.5 w-3.5" />
