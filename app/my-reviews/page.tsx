@@ -99,12 +99,7 @@ export default function MyReviewsPage() {
               <div className="flex items-start gap-4">
                 <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-orange-500/20 text-orange-300 ring-1 ring-orange-400/30">
                   <MessageSquare className="h-7 w-7" />
-                </div>
-
-                <div>
-                  <div className="inline-flex items-center rounded-full bg-orange-500/20 px-3 py-1 text-xs font-medium text-orange-300 ring-1 ring-orange-400/30">
-                    My Reviews
-                  </div>
+                
                   <h1 className="mt-3 text-2xl font-bold sm:text-3xl">
                     รีวิวของฉัน
                   </h1>
