@@ -45,7 +45,7 @@ export default function HomeRedirectPage() {
         color: "#888",
       }}
     >
-      
+      <div style={{ fontSize: 40 }}></div>
       <div style={{ fontSize: 16 }}>กำลังโหลด...</div>
     </div>
   );
