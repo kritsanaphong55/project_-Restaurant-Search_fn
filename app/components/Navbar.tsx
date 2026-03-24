@@ -68,7 +68,7 @@ export default function Navbar() {
             href="/"
             className="flex items-center gap-2 font-bold text-gray-900 text-lg hover:text-orange-500 transition-colors duration-150 shrink-0"
           >
-            <span className="text-2xl">🍜</span>
+            
             <span className="hidden sm:inline">Restaurant Search</span>
           </Link>
 
