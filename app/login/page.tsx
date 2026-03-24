@@ -85,7 +85,7 @@ export default function LoginPage() {
             <div>
               <div className="inline-flex items-center gap-2 rounded-full bg-orange-500/20 px-4 py-1 text-sm font-medium text-orange-300 ring-1 ring-orange-400/30">
                 <UtensilsCrossed className="h-4 w-4" />
-                Restaurant Finder
+                Restaurant search system in Walailak Road area
               </div>
 
               <h1 className="mt-6 text-4xl font-bold leading-tight">
