@@ -12,10 +12,8 @@ import {
   Wallet,
   Clock3,
   Star,
-  RefreshCw,
   ChevronLeft,
   ChevronRight,
-  MapPin,
 } from "lucide-react";
 import { apiFetch } from "@/src/lib/api";
 import RequireAuth from "@/app/components/RequireAuth";
@@ -90,27 +88,27 @@ export default function RestaurantsPage() {
   const load = useCallback(async () => {
     setMsg(null);
     setLoading(true);
-
     try {
       const params = new URLSearchParams();
-
       if (q.trim()) params.append("q", q.trim());
       if (foodtypeId) params.append("foodtype_id", foodtypeId);
       if (openNow) params.append("open_now", "1");
-
       if (priceRange) {
         const [min, max] = priceRange.split("-");
         if (min) params.append("min", min);
         if (max) params.append("max", max);
       }
-
       const path =
         params.toString().length > 0
           ? `/api/restaurants/search?${params.toString()}`
           : `/api/restaurants?status=APPROVED`;
-
       const res = await apiFetch(path);
-      setItems(res.data || []);
+      // ✅ เรียงตามคะแนนรีวิวจากมากไปน้อย
+      const sorted = (res.data || []).sort(
+        (a: Restaurant, b: Restaurant) =>
+          Number(b.avg_rating || 0) - Number(a.avg_rating || 0)
+      );
+      setItems(sorted);
       setPage(1);
     } catch (e: unknown) {
       setMsg(e instanceof Error ? e.message : "โหลดร้านไม่สำเร็จ");
@@ -119,18 +117,9 @@ export default function RestaurantsPage() {
     }
   }, [q, foodtypeId, priceRange, openNow]);
 
-  useEffect(() => {
-    void loadFoodTypes();
-  }, [loadFoodTypes]);
-
-  useEffect(() => {
-    void loadPriceOptions(foodtypeId);
-    setPriceRange("");
-  }, [foodtypeId, loadPriceOptions]);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
+  useEffect(() => { void loadFoodTypes(); }, [loadFoodTypes]);
+  useEffect(() => { void loadPriceOptions(foodtypeId); setPriceRange(""); }, [foodtypeId, loadPriceOptions]);
+  useEffect(() => { void load(); }, [load]);
 
   const totalPages = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
 
@@ -143,38 +132,19 @@ export default function RestaurantsPage() {
     <RequireAuth allow={["USER"]}>
       <div className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-white">
         <div className="mx-auto max-w-5xl px-4 py-8">
+
           {/* Header */}
           <div className="mb-8 rounded-3xl bg-gradient-to-r from-orange-500 to-orange-400 px-6 py-6 text-white shadow-lg">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-start gap-4">
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
-                  <UtensilsCrossed className="h-7 w-7" />
-                </div>
-
-                <div>
-                  <h1 className="text-3xl font-bold leading-tight">
-                    ค้นหาร้านอาหาร
-                  </h1>
-                  <p className="mt-1 text-sm text-orange-50">
-                   
-                  </p>
-                  <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs text-white/90">
-                    <MapPin className="h-3.5 w-3.5" />
-                    ระบบค้นหาร้านอาหารสำหรับผู้ใช้งาน
-                  </div>
-                </div>
+            <div className="flex items-start gap-4">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
+                <UtensilsCrossed className="h-7 w-7" />
               </div>
-
-              <button
-                onClick={() => void load()}
-                disabled={loading}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-orange-600 shadow-sm transition hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <RefreshCw
-                  className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
-                />
-                รีเฟรช
-              </button>
+              <div>
+                <h1 className="text-3xl font-bold leading-tight">ค้นหาร้านอาหาร</h1>
+                <p className="mt-1 text-sm text-orange-50">
+                  ค้นหาร้านอาหารในพื้นที่ถนนวลัยลักษณ์
+                </p>
+              </div>
             </div>
           </div>
 
@@ -186,7 +156,6 @@ export default function RestaurantsPage() {
             </div>
 
             <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto]">
-              {/* Search input */}
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 <input
@@ -197,10 +166,9 @@ export default function RestaurantsPage() {
                   className="w-full rounded-xl border border-gray-200 bg-gray-50 py-3 pl-10 pr-4 text-sm text-gray-800 placeholder-gray-400 outline-none transition focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100"
                 />
               </div>
-
               <button
                 onClick={() => void load()}
-                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-orange-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-orange-600"
+                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-orange-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-orange-600 cursor-pointer"
               >
                 <Search className="h-4 w-4" />
                 ค้นหา
@@ -245,16 +213,14 @@ export default function RestaurantsPage() {
               <button
                 type="button"
                 onClick={() => setOpenNow((v) => !v)}
-                className={`relative h-6 w-11 rounded-full transition ${
+                className={`relative h-6 w-11 rounded-full transition cursor-pointer ${
                   openNow ? "bg-orange-500" : "bg-gray-200"
                 }`}
                 aria-pressed={openNow}
               >
-                <span
-                  className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition ${
-                    openNow ? "translate-x-5" : "translate-x-0.5"
-                  }`}
-                />
+                <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition ${
+                  openNow ? "translate-x-5" : "translate-x-0.5"
+                }`} />
               </button>
               <span className="text-sm font-medium text-gray-700">
                 แสดงเฉพาะร้านที่เปิดอยู่ตอนนี้
@@ -279,12 +245,9 @@ export default function RestaurantsPage() {
 
           {/* Result count */}
           {!loading && (
-            <div className="mb-4 text-sm text-gray-500">
-              พบ{" "}
-              <span className="font-semibold text-orange-500">
-                {items.length}
-              </span>{" "}
-              ร้าน
+            <div className="mb-4 flex items-center gap-2 text-sm text-gray-500">
+              พบ <span className="font-semibold text-orange-500">{items.length}</span> ร้าน
+              <span className="text-gray-400">• เรียงตามคะแนนรีวิว</span>
             </div>
           )}
 
@@ -294,19 +257,20 @@ export default function RestaurantsPage() {
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-orange-50 text-orange-500">
                 <Search className="h-8 w-8" />
               </div>
-              <h2 className="text-lg font-semibold text-[#1F2937]">
-                ไม่พบร้านที่ตรงกับเงื่อนไข
-              </h2>
-              <p className="mt-2 text-sm text-gray-500">
-                ลองเปลี่ยนคำค้นหา ประเภทอาหาร หรือช่วงราคาใหม่
-              </p>
+              <h2 className="text-lg font-semibold text-[#1F2937]">ไม่พบร้านที่ตรงกับเงื่อนไข</h2>
+              <p className="mt-2 text-sm text-gray-500">ลองเปลี่ยนคำค้นหา ประเภทอาหาร หรือช่วงราคาใหม่</p>
             </div>
           )}
 
           {/* Restaurant list */}
           <div className="flex flex-col gap-4">
-            {pagedItems.map((r) => {
+            {pagedItems.map((r, index) => {
               const safeCover = r.cover_image?.trim();
+              // ✅ badge อันดับ top 3
+              const rankBadge =
+                page === 1 && index < 3
+                  ? ["🥇", "🥈", "🥉"][index]
+                  : null;
 
               return (
                 <Link
@@ -317,17 +281,25 @@ export default function RestaurantsPage() {
                   <div className="group flex gap-4 rounded-3xl border border-gray-100 bg-white p-4 shadow-sm transition duration-200 hover:border-orange-200 hover:shadow-md">
                     {/* Cover image */}
                     {safeCover ? (
-                      <Image
-                        src={safeCover}
-                        alt={r.restaurant_name}
-                        width={112}
-                        height={92}
-                        unoptimized
-                        className="h-24 w-28 shrink-0 rounded-2xl border border-gray-100 object-cover"
-                      />
+                      <div className="relative shrink-0">
+                        <Image
+                          src={safeCover}
+                          alt={r.restaurant_name}
+                          width={112}
+                          height={92}
+                          unoptimized
+                          className="h-24 w-28 rounded-2xl border border-gray-100 object-cover"
+                        />
+                        {rankBadge && (
+                          <span className="absolute -top-2 -left-2 text-xl">{rankBadge}</span>
+                        )}
+                      </div>
                     ) : (
-                      <div className="flex h-24 w-28 shrink-0 items-center justify-center rounded-2xl border border-orange-100 bg-orange-50 text-orange-500">
+                      <div className="relative flex h-24 w-28 shrink-0 items-center justify-center rounded-2xl border border-orange-100 bg-orange-50 text-orange-500">
                         <UtensilsCrossed className="h-8 w-8" />
+                        {rankBadge && (
+                          <span className="absolute -top-2 -left-2 text-xl">{rankBadge}</span>
+                        )}
                       </div>
                     )}
 
@@ -338,7 +310,6 @@ export default function RestaurantsPage() {
                           <h2 className="text-lg font-bold leading-tight text-[#1F2937] transition group-hover:text-orange-500">
                             {r.restaurant_name}
                           </h2>
-
                           <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-gray-500">
                             <span className="inline-flex items-center gap-1">
                               <HandPlatter className="h-4 w-4 text-orange-400" />
@@ -346,14 +317,9 @@ export default function RestaurantsPage() {
                             </span>
                           </div>
                         </div>
-
-                        <span
-                          className={`inline-flex shrink-0 items-center rounded-full px-3 py-1 text-xs font-semibold ${
-                            r.is_open_now
-                              ? "bg-green-100 text-green-700"
-                              : "bg-gray-100 text-gray-500"
-                          }`}
-                        >
+                        <span className={`inline-flex shrink-0 items-center rounded-full px-3 py-1 text-xs font-semibold ${
+                          r.is_open_now ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
+                        }`}>
                           {r.is_open_now ? "● เปิดอยู่" : "● ปิดอยู่"}
                         </span>
                       </div>
@@ -364,9 +330,7 @@ export default function RestaurantsPage() {
                           <Star className="h-4 w-4 fill-orange-400 text-orange-400" />
                           {Number(r.avg_rating || 0).toFixed(1)}
                         </span>
-                        <span className="text-gray-400">
-                          ({r.review_count || 0} รีวิว)
-                        </span>
+                        <span className="text-gray-400">({r.review_count || 0} รีวิว)</span>
                       </div>
 
                       {/* Price + Time */}
@@ -375,7 +339,6 @@ export default function RestaurantsPage() {
                           <Wallet className="h-4 w-4 text-orange-400" />
                           {r.price_min} – {r.price_max} บาท
                         </span>
-
                         <span className="inline-flex items-center gap-1.5">
                           <Clock3 className="h-4 w-4 text-orange-400" />
                           {r.open_time || "-"} – {r.close_time || "-"}
@@ -394,27 +357,25 @@ export default function RestaurantsPage() {
               <button
                 disabled={page <= 1}
                 onClick={() => setPage((p) => p - 1)}
-                className="inline-flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-2 text-sm text-gray-600 transition hover:border-orange-400 hover:text-orange-500 disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-2 text-sm text-gray-600 transition hover:border-orange-400 hover:text-orange-500 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
               >
                 <ChevronLeft className="h-4 w-4" />
                 ก่อนหน้า
               </button>
-
               <span className="px-2 text-sm text-gray-500">
-                หน้า <span className="font-semibold text-[#1F2937]">{page}</span>{" "}
-                / {totalPages}
+                หน้า <span className="font-semibold text-[#1F2937]">{page}</span> / {totalPages}
               </span>
-
               <button
                 disabled={page >= totalPages}
                 onClick={() => setPage((p) => p + 1)}
-                className="inline-flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-2 text-sm text-gray-600 transition hover:border-orange-400 hover:text-orange-500 disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-2 text-sm text-gray-600 transition hover:border-orange-400 hover:text-orange-500 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
               >
                 ถัดไป
                 <ChevronRight className="h-4 w-4" />
               </button>
             </div>
           )}
+
         </div>
       </div>
     </RequireAuth>
