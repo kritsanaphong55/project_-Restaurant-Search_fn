@@ -142,7 +142,7 @@ export default function RestaurantsPage() {
               <div>
                 <h1 className="text-3xl font-bold leading-tight">ค้นหาร้านอาหาร</h1>
                 <p className="mt-1 text-sm text-orange-50">
-                  ค้นหาร้านอาหารในพื้นที่ถนนวลัยลักษณ์
+                  
                 </p>
               </div>
             </div>
