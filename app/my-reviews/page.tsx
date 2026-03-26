@@ -34,7 +34,7 @@ function StatusBadge({ status }: { status: MyReview["review_status"] }) {
     return (
       <span className="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
         <CheckCircle2 className="h-3.5 w-3.5" />
-        APPROVED
+        อนุมัติแล้ว
       </span>
     );
   }
@@ -42,14 +42,14 @@ function StatusBadge({ status }: { status: MyReview["review_status"] }) {
     return (
       <span className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-600">
         <XCircle className="h-3.5 w-3.5" />
-        REJECTED
+        ไม่อนุมัติ
       </span>
     );
   }
   return (
     <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
       <AlertTriangle className="h-3.5 w-3.5" />
-      PENDING
+      รออนุมัติ
     </span>
   );
 }
@@ -131,7 +131,7 @@ export default function MyReviewsPage() {
                   <AlertTriangle className="h-5 w-5" />
                 </div>
                 <div>
-                  <div className="text-sm text-gray-500">รอตรวจสอบ</div>
+                  <div className="text-sm text-gray-500">รออนุมัติ</div>
                   <div className="text-xl font-bold text-[#1F2937]">{summary.pending}</div>
                 </div>
               </div>
@@ -143,7 +143,7 @@ export default function MyReviewsPage() {
                   <XCircle className="h-5 w-5" />
                 </div>
                 <div>
-                  <div className="text-sm text-gray-500">ถูกปฏิเสธ</div>
+                  <div className="text-sm text-gray-500">ไม่อนุมัติ</div>
                   <div className="text-xl font-bold text-[#1F2937]">{summary.rejected}</div>
                 </div>
               </div>
