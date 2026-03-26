@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   Store,
-  RefreshCw,
   Plus,
   MapPin,
   HandPlatter,
@@ -25,6 +24,7 @@ import {
   Save,
   X,
   FileText,
+  RefreshCw,
 } from "lucide-react";
 import RequireAuth from "@/app/components/RequireAuth";
 import { apiFetch } from "@/src/lib/api";
@@ -64,7 +64,6 @@ function StatusBadge({ status }: { status: Restaurant["status"] }) {
       </span>
     );
   }
-
   if (status === "REJECTED") {
     return (
       <span className="inline-flex items-center rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-600">
@@ -72,7 +71,6 @@ function StatusBadge({ status }: { status: Restaurant["status"] }) {
       </span>
     );
   }
-
   return (
     <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
       PENDING
@@ -112,7 +110,6 @@ export default function OwnerPage() {
   const load = useCallback(async () => {
     setMsg(null);
     setLoading(true);
-
     try {
       const res = await apiFetch("/api/restaurants/mine");
       setItems(res.data || []);
@@ -123,20 +120,14 @@ export default function OwnerPage() {
     }
   }, []);
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  useEffect(() => { void load(); }, [load]);
 
   const toggleActive = async (restaurantId: number) => {
     if (actioningId !== null) return;
-
     setMsg(null);
     setActioningId(restaurantId);
-
     try {
-      await apiFetch(`/api/restaurants/${restaurantId}/toggle-active`, {
-        method: "PATCH",
-      });
+      await apiFetch(`/api/restaurants/${restaurantId}/toggle-active`, { method: "PATCH" });
       await load();
     } catch (e: unknown) {
       showMsg(e instanceof Error ? e.message : "เปลี่ยนสถานะร้านไม่สำเร็จ");
@@ -154,16 +145,8 @@ export default function OwnerPage() {
     setEditCloseTime(toInputTime(restaurant.close_time));
     setEditPriceMin(String(restaurant.price_min ?? 0));
     setEditPriceMax(String(restaurant.price_max ?? 0));
-    setEditLatitude(
-      restaurant.latitude !== null && restaurant.latitude !== undefined
-        ? String(restaurant.latitude)
-        : ""
-    );
-    setEditLongitude(
-      restaurant.longitude !== null && restaurant.longitude !== undefined
-        ? String(restaurant.longitude)
-        : ""
-    );
+    setEditLatitude(restaurant.latitude !== null && restaurant.latitude !== undefined ? String(restaurant.latitude) : "");
+    setEditLongitude(restaurant.longitude !== null && restaurant.longitude !== undefined ? String(restaurant.longitude) : "");
   };
 
   const cancelEditRestaurant = () => {
@@ -181,7 +164,6 @@ export default function OwnerPage() {
 
   const saveEditRestaurant = async (restaurant: Restaurant) => {
     if (actioningId !== null) return;
-
     const restaurantName = editRestaurantName.trim();
     const address = editAddress.trim();
     const priceMinNum = Number(editPriceMin);
@@ -189,33 +171,13 @@ export default function OwnerPage() {
     const latitudeNum = Number(editLatitude);
     const longitudeNum = Number(editLongitude);
 
-    if (!restaurantName || !address) {
-      showMsg("กรุณากรอกชื่อร้านและที่อยู่");
-      return;
-    }
-
-    if (!Number.isFinite(priceMinNum) || !Number.isFinite(priceMaxNum)) {
-      showMsg("ราคาต้องเป็นตัวเลข");
-      return;
-    }
-
-    if (priceMinNum < 0 || priceMaxNum < 0) {
-      showMsg("ราคาต้องไม่ติดลบ");
-      return;
-    }
-
-    if (priceMinNum > priceMaxNum) {
-      showMsg("ราคาต่ำสุดต้องไม่มากกว่าราคาสูงสุด");
-      return;
-    }
-
-    if (!Number.isFinite(latitudeNum) || !Number.isFinite(longitudeNum)) {
-      showMsg("กรุณากรอก latitude และ longitude ให้ถูกต้อง");
-      return;
-    }
+    if (!restaurantName || !address) { showMsg("กรุณากรอกชื่อร้านและที่อยู่"); return; }
+    if (!Number.isFinite(priceMinNum) || !Number.isFinite(priceMaxNum)) { showMsg("ราคาต้องเป็นตัวเลข"); return; }
+    if (priceMinNum < 0 || priceMaxNum < 0) { showMsg("ราคาต้องไม่ติดลบ"); return; }
+    if (priceMinNum > priceMaxNum) { showMsg("ราคาต่ำสุดต้องไม่มากกว่าราคาสูงสุด"); return; }
+    if (!Number.isFinite(latitudeNum) || !Number.isFinite(longitudeNum)) { showMsg("กรุณากรอก latitude และ longitude ให้ถูกต้อง"); return; }
 
     setActioningId(restaurant.restaurant_id);
-
     try {
       await apiFetch(`/api/restaurants/${restaurant.restaurant_id}/owner`, {
         method: "PUT",
@@ -230,11 +192,9 @@ export default function OwnerPage() {
           price_min: priceMinNum,
           price_max: priceMaxNum,
           foodtype_ids: Array.isArray(restaurant.food_types)
-            ? restaurant.food_types.map((ft) => ft.foodtype_id)
-            : [],
+            ? restaurant.food_types.map((ft) => ft.foodtype_id) : [],
         }),
       });
-
       showMsg("แก้ไขข้อมูลร้านสำเร็จ", true);
       cancelEditRestaurant();
       await load();
@@ -245,61 +205,41 @@ export default function OwnerPage() {
     }
   };
 
-  const summary = useMemo(() => {
-    const total = items.length;
-    const approved = items.filter((r) => r.status === "APPROVED").length;
-    const pending = items.filter((r) => r.status === "PENDING").length;
-    const rejected = items.filter((r) => r.status === "REJECTED").length;
-
-    return { total, approved, pending, rejected };
-  }, [items]);
+  const summary = useMemo(() => ({
+    total: items.length,
+    approved: items.filter((r) => r.status === "APPROVED").length,
+    pending: items.filter((r) => r.status === "PENDING").length,
+    rejected: items.filter((r) => r.status === "REJECTED").length,
+  }), [items]);
 
   return (
     <RequireAuth allow={["OWNER"]}>
       <div className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-white">
         <div className="mx-auto max-w-6xl px-4 py-8">
+
+          {/* Header */}
           <div className="mb-6 rounded-3xl bg-gradient-to-r from-orange-500 to-orange-400 px-6 py-6 text-white shadow-lg">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex items-start gap-4">
                 <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
                   <LayoutDashboard className="h-7 w-7" />
                 </div>
-
                 <div>
-                  <h1 className="text-3xl font-bold leading-tight">
-                    Owner Dashboard
-                  </h1>
-                  <p className="mt-1 text-sm text-orange-50">
-                    จัดการร้านอาหาร เมนู รูปภาพ และสถานะการเปิดให้บริการ
-                  </p>
-                  <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs text-white/90">
-                    <Store className="h-3.5 w-3.5" />
-                    พื้นที่สำหรับเจ้าของร้าน
-                  </div>
+                  <h1 className="text-3xl font-bold leading-tight">Owner Dashboard</h1>
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-3">
-                <button
-                  onClick={() => void load()}
-                  disabled={loading}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-orange-600 shadow-sm transition hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-                  รีเฟรช
-                </button>
-
-                <Link
-                  href="/owner/new-restaurant"
-                  className="inline-flex items-center gap-2 rounded-xl border border-white/30 bg-white/15 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/20"
-                >
-                  <Plus className="h-4 w-4" />
-                  เพิ่มร้านใหม่
-                </Link>
-              </div>
+              <Link
+                href="/owner/new-restaurant"
+                className="inline-flex items-center gap-2 rounded-xl border border-white/30 bg-white/15 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/20"
+              >
+                <Plus className="h-4 w-4" />
+                เพิ่มร้านใหม่
+              </Link>
             </div>
           </div>
 
+          {/* Summary cards */}
           <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <div className="rounded-2xl border border-orange-100 bg-white p-4 shadow-sm">
               <div className="flex items-center gap-3">
@@ -308,9 +248,7 @@ export default function OwnerPage() {
                 </div>
                 <div>
                   <div className="text-sm text-gray-500">ร้านทั้งหมด</div>
-                  <div className="text-xl font-bold text-[#1F2937]">
-                    {summary.total}
-                  </div>
+                  <div className="text-xl font-bold text-[#1F2937]">{summary.total}</div>
                 </div>
               </div>
             </div>
@@ -321,10 +259,9 @@ export default function OwnerPage() {
                   <CheckCircle2 className="h-5 w-5" />
                 </div>
                 <div>
-                  <div className="text-sm text-gray-500">อนุมัติแล้ว</div>
-                  <div className="text-xl font-bold text-[#1F2937]">
-                    {summary.approved}
-                  </div>
+                  {/* ✅ เปลี่ยนเป็นภาษาไทยชัดเจน */}
+                  <div className="text-sm text-gray-500">ร้านที่ผ่านการอนุมัติ</div>
+                  <div className="text-xl font-bold text-[#1F2937]">{summary.approved}</div>
                 </div>
               </div>
             </div>
@@ -335,10 +272,9 @@ export default function OwnerPage() {
                   <Clock4 className="h-5 w-5" />
                 </div>
                 <div>
-                  <div className="text-sm text-gray-500">รออนุมัติ</div>
-                  <div className="text-xl font-bold text-[#1F2937]">
-                    {summary.pending}
-                  </div>
+                  {/* ✅ เปลี่ยนเป็นภาษาไทยชัดเจน */}
+                  <div className="text-sm text-gray-500">รอการตรวจสอบ</div>
+                  <div className="text-xl font-bold text-[#1F2937]">{summary.pending}</div>
                 </div>
               </div>
             </div>
@@ -349,30 +285,25 @@ export default function OwnerPage() {
                   <Ban className="h-5 w-5" />
                 </div>
                 <div>
-                  <div className="text-sm text-gray-500">ถูกปฏิเสธ</div>
-                  <div className="text-xl font-bold text-[#1F2937]">
-                    {summary.rejected}
-                  </div>
+                  {/* ✅ เปลี่ยนเป็นภาษาไทยชัดเจน */}
+                  <div className="text-sm text-gray-500">ไม่ผ่านการอนุมัติ</div>
+                  <div className="text-xl font-bold text-[#1F2937]">{summary.rejected}</div>
                 </div>
               </div>
             </div>
           </div>
 
           {msg && (
-            <div
-              className={`mb-4 rounded-2xl border px-4 py-3 text-sm ${
-                success
-                  ? "border-green-200 bg-green-50 text-green-700"
-                  : "border-red-200 bg-red-50 text-red-600"
-              }`}
-            >
+            <div className={`mb-4 rounded-2xl border px-4 py-3 text-sm ${
+              success ? "border-green-200 bg-green-50 text-green-700" : "border-red-200 bg-red-50 text-red-600"
+            }`}>
               {msg}
             </div>
           )}
 
           {loading && (
             <div className="mb-4 flex items-center gap-2 rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm text-gray-500">
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-orange-400 border-t-transparent" />
+              <RefreshCw className="h-4 w-4 animate-spin text-orange-400" />
               กำลังโหลดข้อมูลร้าน...
             </div>
           )}
@@ -382,9 +313,7 @@ export default function OwnerPage() {
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-orange-50 text-orange-500">
                 <Store className="h-8 w-8" />
               </div>
-              <h2 className="text-lg font-semibold text-[#1F2937]">
-                ยังไม่มีร้านอาหาร
-              </h2>
+              <h2 className="text-lg font-semibold text-[#1F2937]">ยังไม่มีร้านอาหาร</h2>
               <p className="mt-2 text-sm text-gray-500">
                 เริ่มเพิ่มร้านแรกของคุณเพื่อให้ผู้ใช้งานสามารถค้นหาและดูข้อมูลร้านได้
               </p>
@@ -409,23 +338,18 @@ export default function OwnerPage() {
                 <div
                   key={r.restaurant_id}
                   className={`rounded-3xl border bg-white p-5 shadow-sm transition ${
-                    isActioning
-                      ? "border-orange-200 opacity-70"
-                      : "border-gray-100 hover:border-orange-200 hover:shadow-md"
+                    isActioning ? "border-orange-200 opacity-70" : "border-gray-100 hover:border-orange-200 hover:shadow-md"
                   }`}
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h2 className="text-xl font-bold text-[#1F2937]">
-                          {r.restaurant_name}
-                        </h2>
+                        <h2 className="text-xl font-bold text-[#1F2937]">{r.restaurant_name}</h2>
                         <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-500">
                           #{r.restaurant_id}
                         </span>
                       </div>
                     </div>
-
                     <StatusBadge status={r.status} />
                   </div>
 
@@ -436,26 +360,18 @@ export default function OwnerPage() {
                           <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-orange-400" />
                           <span>{r.address}</span>
                         </div>
-
                         <div className="inline-flex items-start gap-2">
                           <HandPlatter className="mt-0.5 h-4 w-4 shrink-0 text-orange-400" />
                           <span>{foodTypesLabel(r.food_types)}</span>
                         </div>
-
                         <div className="inline-flex items-center gap-2">
                           <Clock3 className="h-4 w-4 shrink-0 text-orange-400" />
-                          <span>
-                            {r.open_time || "-"} – {r.close_time || "-"}
-                          </span>
+                          <span>{r.open_time || "-"} – {r.close_time || "-"}</span>
                         </div>
-
                         <div className="inline-flex items-center gap-2">
                           <Wallet className="h-4 w-4 shrink-0 text-orange-400" />
-                          <span>
-                            {r.price_min} – {r.price_max} บาท
-                          </span>
+                          <span>{r.price_min} – {r.price_max} บาท</span>
                         </div>
-
                         <div className="inline-flex items-start gap-2">
                           <FileText className="mt-0.5 h-4 w-4 shrink-0 text-orange-400" />
                           <span>{r.description || "-"}</span>
@@ -466,23 +382,14 @@ export default function OwnerPage() {
                         <div className="inline-flex items-center gap-2 rounded-full bg-gray-50 px-3 py-1.5">
                           <Power className="h-4 w-4 text-orange-400" />
                           <span className="text-gray-600">สถานะร้าน:</span>
-                          <span
-                            className={`font-semibold ${
-                              r.is_active ? "text-green-600" : "text-red-600"
-                            }`}
-                          >
+                          <span className={`font-semibold ${r.is_active ? "text-green-600" : "text-red-600"}`}>
                             {r.is_active ? "เปิดให้บริการ" : "ปิดชั่วคราว"}
                           </span>
                         </div>
-
                         <div className="inline-flex items-center gap-2 rounded-full bg-gray-50 px-3 py-1.5">
                           <CircleDot className="h-4 w-4 text-orange-400" />
                           <span className="text-gray-600">ตอนนี้:</span>
-                          <span
-                            className={`font-semibold ${
-                              r.is_open_now ? "text-green-600" : "text-gray-500"
-                            }`}
-                          >
+                          <span className={`font-semibold ${r.is_open_now ? "text-green-600" : "text-gray-500"}`}>
                             {r.is_open_now ? "เปิดอยู่" : "ปิดอยู่"}
                           </span>
                         </div>
@@ -501,11 +408,7 @@ export default function OwnerPage() {
                           }`}
                         >
                           <Power className="h-4 w-4" />
-                          {isActioning
-                            ? "กำลังดำเนินการ..."
-                            : r.is_active
-                            ? "ปิดร้านชั่วคราว"
-                            : "เปิดร้าน"}
+                          {isActioning ? "กำลังดำเนินการ..." : r.is_active ? "ปิดร้านชั่วคราว" : "เปิดร้าน"}
                         </button>
 
                         <button
@@ -534,7 +437,7 @@ export default function OwnerPage() {
                         </Link>
 
                         <Link
-                          href={`/restaurants/${r.restaurant_id}`}
+                          href={`/restaurants/${r.restaurant_id}?back=/owner`}
                           className="inline-flex items-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-4 py-2.5 text-sm font-medium text-orange-600 transition hover:bg-orange-100"
                         >
                           <Eye className="h-4 w-4" />
@@ -546,9 +449,7 @@ export default function OwnerPage() {
                     <div className="mt-4 rounded-2xl border border-orange-100 bg-orange-50/50 p-4">
                       <div className="grid gap-4 md:grid-cols-2">
                         <div className="md:col-span-2">
-                          <label className="mb-2 block text-sm font-medium text-gray-700">
-                            ชื่อร้าน
-                          </label>
+                          <label className="mb-2 block text-sm font-medium text-gray-700">ชื่อร้าน</label>
                           <input
                             value={editRestaurantName}
                             onChange={(e) => setEditRestaurantName(e.target.value)}
@@ -558,9 +459,7 @@ export default function OwnerPage() {
                         </div>
 
                         <div className="md:col-span-2">
-                          <label className="mb-2 block text-sm font-medium text-gray-700">
-                            รายละเอียดร้าน
-                          </label>
+                          <label className="mb-2 block text-sm font-medium text-gray-700">รายละเอียดร้าน</label>
                           <textarea
                             value={editDescription}
                             onChange={(e) => setEditDescription(e.target.value)}
@@ -571,9 +470,7 @@ export default function OwnerPage() {
                         </div>
 
                         <div className="md:col-span-2">
-                          <label className="mb-2 block text-sm font-medium text-gray-700">
-                            ที่อยู่
-                          </label>
+                          <label className="mb-2 block text-sm font-medium text-gray-700">ที่อยู่</label>
                           <input
                             value={editAddress}
                             onChange={(e) => setEditAddress(e.target.value)}
@@ -583,9 +480,7 @@ export default function OwnerPage() {
                         </div>
 
                         <div>
-                          <label className="mb-2 block text-sm font-medium text-gray-700">
-                            เวลาเปิด
-                          </label>
+                          <label className="mb-2 block text-sm font-medium text-gray-700">เวลาเปิด</label>
                           <input
                             type="time"
                             value={editOpenTime}
@@ -596,9 +491,7 @@ export default function OwnerPage() {
                         </div>
 
                         <div>
-                          <label className="mb-2 block text-sm font-medium text-gray-700">
-                            เวลาปิด
-                          </label>
+                          <label className="mb-2 block text-sm font-medium text-gray-700">เวลาปิด</label>
                           <input
                             type="time"
                             value={editCloseTime}
@@ -609,9 +502,7 @@ export default function OwnerPage() {
                         </div>
 
                         <div>
-                          <label className="mb-2 block text-sm font-medium text-gray-700">
-                            ราคาต่ำสุด
-                          </label>
+                          <label className="mb-2 block text-sm font-medium text-gray-700">ราคาต่ำสุด</label>
                           <input
                             type="number"
                             min={0}
@@ -623,9 +514,7 @@ export default function OwnerPage() {
                         </div>
 
                         <div>
-                          <label className="mb-2 block text-sm font-medium text-gray-700">
-                            ราคาสูงสุด
-                          </label>
+                          <label className="mb-2 block text-sm font-medium text-gray-700">ราคาสูงสุด</label>
                           <input
                             type="number"
                             min={0}
@@ -637,9 +526,7 @@ export default function OwnerPage() {
                         </div>
 
                         <div>
-                          <label className="mb-2 block text-sm font-medium text-gray-700">
-                            Latitude
-                          </label>
+                          <label className="mb-2 block text-sm font-medium text-gray-700">Latitude</label>
                           <input
                             value={editLatitude}
                             onChange={(e) => setEditLatitude(e.target.value)}
@@ -649,9 +536,7 @@ export default function OwnerPage() {
                         </div>
 
                         <div>
-                          <label className="mb-2 block text-sm font-medium text-gray-700">
-                            Longitude
-                          </label>
+                          <label className="mb-2 block text-sm font-medium text-gray-700">Longitude</label>
                           <input
                             value={editLongitude}
                             onChange={(e) => setEditLongitude(e.target.value)}
@@ -700,6 +585,7 @@ export default function OwnerPage() {
               );
             })}
           </div>
+
         </div>
       </div>
     </RequireAuth>
