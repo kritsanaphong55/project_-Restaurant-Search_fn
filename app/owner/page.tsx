@@ -60,20 +60,20 @@ function StatusBadge({ status }: { status: Restaurant["status"] }) {
   if (status === "APPROVED") {
     return (
       <span className="inline-flex items-center rounded-full border border-green-200 bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
-        APPROVED
+        อนุมัติแล้ว
       </span>
     );
   }
   if (status === "REJECTED") {
     return (
       <span className="inline-flex items-center rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-600">
-        REJECTED
+        ไม่อนุมัติ
       </span>
     );
   }
   return (
     <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
-      PENDING
+      รออนุมัติ
     </span>
   );
 }
@@ -221,9 +221,7 @@ export default function OwnerPage() {
       });
       await load();
     } catch (e: unknown) {
-      showMsg(
-        e instanceof Error ? e.message : "เปลี่ยนสถานะร้านไม่สำเร็จ"
-      );
+      showMsg(e instanceof Error ? e.message : "เปลี่ยนสถานะร้านไม่สำเร็จ");
     } finally {
       setActioningId(null);
     }
@@ -316,9 +314,7 @@ export default function OwnerPage() {
       cancelEditRestaurant();
       await load();
     } catch (e: unknown) {
-      showMsg(
-        e instanceof Error ? e.message : "แก้ไขข้อมูลร้านไม่สำเร็จ"
-      );
+      showMsg(e instanceof Error ? e.message : "แก้ไขข้อมูลร้านไม่สำเร็จ");
     } finally {
       setActioningId(null);
     }
@@ -371,9 +367,7 @@ export default function OwnerPage() {
                 </div>
                 <div>
                   <div className="text-sm text-gray-500">ร้านทั้งหมด</div>
-                  <div className="text-xl font-bold text-[#1F2937]">
-                    {summary.total}
-                  </div>
+                  <div className="text-xl font-bold text-[#1F2937]">{summary.total}</div>
                 </div>
               </div>
             </div>
@@ -384,10 +378,8 @@ export default function OwnerPage() {
                   <CheckCircle2 className="h-5 w-5" />
                 </div>
                 <div>
-                  <div className="text-sm text-gray-500">ผ่านการอนุมัติ</div>
-                  <div className="text-xl font-bold text-[#1F2937]">
-                    {summary.approved}
-                  </div>
+                  <div className="text-sm text-gray-500">อนุมัติแล้ว</div>
+                  <div className="text-xl font-bold text-[#1F2937]">{summary.approved}</div>
                 </div>
               </div>
             </div>
@@ -398,10 +390,8 @@ export default function OwnerPage() {
                   <Clock4 className="h-5 w-5" />
                 </div>
                 <div>
-                  <div className="text-sm text-gray-500">รอการตรวจสอบ</div>
-                  <div className="text-xl font-bold text-[#1F2937]">
-                    {summary.pending}
-                  </div>
+                  <div className="text-sm text-gray-500">รออนุมัติ</div>
+                  <div className="text-xl font-bold text-[#1F2937]">{summary.pending}</div>
                 </div>
               </div>
             </div>
@@ -412,10 +402,8 @@ export default function OwnerPage() {
                   <Ban className="h-5 w-5" />
                 </div>
                 <div>
-                  <div className="text-sm text-gray-500">ไม่ผ่านการอนุมัติ</div>
-                  <div className="text-xl font-bold text-[#1F2937]">
-                    {summary.rejected}
-                  </div>
+                  <div className="text-sm text-gray-500">ไม่อนุมัติ</div>
+                  <div className="text-xl font-bold text-[#1F2937]">{summary.rejected}</div>
                 </div>
               </div>
             </div>
@@ -445,9 +433,7 @@ export default function OwnerPage() {
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-orange-50 text-orange-500">
                 <Store className="h-8 w-8" />
               </div>
-              <h2 className="text-lg font-semibold text-[#1F2937]">
-                ยังไม่มีร้านอาหาร
-              </h2>
+              <h2 className="text-lg font-semibold text-[#1F2937]">ยังไม่มีร้านอาหาร</h2>
               <p className="mt-2 text-sm text-gray-500">
                 เริ่มเพิ่มร้านแรกของคุณเพื่อให้ผู้ใช้งานสามารถค้นหาและดูข้อมูลร้านได้
               </p>
@@ -524,24 +510,14 @@ export default function OwnerPage() {
                         <div className="inline-flex items-center gap-2 rounded-full bg-gray-50 px-3 py-1.5">
                           <Power className="h-4 w-4 text-orange-400" />
                           <span className="text-gray-600">สถานะร้าน:</span>
-                          <span
-                            className={`font-semibold ${
-                              r.is_active ? "text-green-600" : "text-red-600"
-                            }`}
-                          >
+                          <span className={`font-semibold ${r.is_active ? "text-green-600" : "text-red-600"}`}>
                             {r.is_active ? "เปิดให้บริการ" : "ปิดชั่วคราว"}
                           </span>
                         </div>
                         <div className="inline-flex items-center gap-2 rounded-full bg-gray-50 px-3 py-1.5">
                           <CircleDot className="h-4 w-4 text-orange-400" />
                           <span className="text-gray-600">ตอนนี้:</span>
-                          <span
-                            className={`font-semibold ${
-                              r.is_open_now
-                                ? "text-green-600"
-                                : "text-gray-500"
-                            }`}
-                          >
+                          <span className={`font-semibold ${r.is_open_now ? "text-green-600" : "text-gray-500"}`}>
                             {r.is_open_now ? "เปิดอยู่" : "ปิดอยู่"}
                           </span>
                         </div>
@@ -605,7 +581,6 @@ export default function OwnerPage() {
                     /* ─────────────────── EDIT FORM ─────────────────── */
                     <div className="mt-4 rounded-2xl border border-gray-100 bg-gray-50/60 p-4">
 
-                      {/* ── ข้อมูลทั่วไป ── */}
                       <SectionDivider label="ข้อมูลทั่วไป" />
                       <div className="mt-2 mb-3 grid gap-3">
                         <div>
@@ -630,7 +605,6 @@ export default function OwnerPage() {
                         </div>
                       </div>
 
-                      {/* ── ที่ตั้ง ── */}
                       <SectionDivider label="ที่ตั้ง" />
                       <div className="mt-2 mb-3 grid gap-3">
                         <div>
@@ -664,7 +638,6 @@ export default function OwnerPage() {
                         </div>
                       </div>
 
-                      {/* ── เวลาและราคา ── */}
                       <SectionDivider label="เวลาและราคา" />
                       <div className="mt-2 mb-4 grid gap-3">
                         <div className="grid grid-cols-2 gap-3">
@@ -707,7 +680,6 @@ export default function OwnerPage() {
                         </div>
                       </div>
 
-                      {/* ── Actions ── */}
                       <div className="flex flex-wrap gap-2">
                         <button
                           onClick={() => void saveEditRestaurant(r)}
@@ -733,18 +705,14 @@ export default function OwnerPage() {
                   {r.status === "PENDING" && !isEditing && (
                     <div className="mt-4 inline-flex w-full items-start gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
                       <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-                      <span>
-                        ร้านนี้รอ Admin อนุมัติ ยังไม่แสดงในระบบค้นหา
-                      </span>
+                      <span>ร้านนี้รอ Admin อนุมัติ ยังไม่แสดงในระบบค้นหา</span>
                     </div>
                   )}
 
                   {r.status === "REJECTED" && !isEditing && (
                     <div className="mt-4 inline-flex w-full items-start gap-2 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
                       <XCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                      <span>
-                        ร้านนี้ถูกปฏิเสธโดย Admin กรุณาติดต่อผู้ดูแลระบบ
-                      </span>
+                      <span>ร้านนี้ถูกปฏิเสธโดย Admin กรุณาติดต่อผู้ดูแลระบบ</span>
                     </div>
                   )}
                 </div>
