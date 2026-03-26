@@ -5,7 +5,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   ChevronLeft,
-  RefreshCw,
   MessageSquare,
   CheckCircle2,
   XCircle,
@@ -14,7 +13,6 @@ import {
   Star,
   Store,
   Clock3,
-  ShieldCheck,
   AlertTriangle,
 } from "lucide-react";
 import { apiFetch } from "@/src/lib/api";
@@ -101,46 +99,27 @@ export default function AdminReviewsPage() {
     <RequireAuth allow={["ADMIN"]}>
       <div className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-white">
         <div className="mx-auto max-w-6xl px-4 py-8">
+
           {/* Header */}
           <div className="mb-6 rounded-3xl bg-gradient-to-r from-orange-500 to-orange-400 px-6 py-6 text-white shadow-lg">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div className="flex items-start gap-4">
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
-                  <MessageSquare className="h-7 w-7" />
-                </div>
-
-                <div>
-                  <div className="mb-2">
-                    <Link
-                      href="/admin"
-                      className="inline-flex items-center gap-1 text-sm text-white/90 transition hover:text-white"
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                      กลับ Admin
-                    </Link>
-                  </div>
-
-                  <h1 className="text-3xl font-bold leading-tight">
-                    รีวิวที่รออนุมัติ
-                  </h1>
-                  <p className="mt-1 text-sm text-orange-50">
-                    ตรวจสอบและอนุมัติรีวิวก่อนแสดงผลในระบบ
-                  </p>
-                  <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs text-white/90">
-                    <ShieldCheck className="h-3.5 w-3.5" />
-                    ส่วนจัดการรีวิวสำหรับผู้ดูแลระบบ
-                  </div>
-                </div>
+            <div className="flex items-start gap-4">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
+                <MessageSquare className="h-7 w-7" />
               </div>
-
-              <button
-                onClick={() => void load()}
-                disabled={loading}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-orange-600 shadow-sm transition hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-                รีเฟรช
-              </button>
+              <div>
+                <div className="mb-2">
+                  <Link
+                    href="/admin"
+                    className="inline-flex items-center gap-1 text-sm text-white/90 transition hover:text-white"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    กลับ Admin
+                  </Link>
+                </div>
+                <h1 className="text-3xl font-bold leading-tight">
+                  รีวิวที่รออนุมัติ
+                </h1>
+              </div>
             </div>
           </div>
 
@@ -167,7 +146,7 @@ export default function AdminReviewsPage() {
                 </div>
                 <div>
                   <div className="text-sm text-gray-500">สถานะรีวิว</div>
-                  <div className="text-xl font-bold text-[#1F2937]">PENDING</div>
+                  <div className="text-xl font-bold text-[#1F2937]">รอตรวจสอบ</div>
                 </div>
               </div>
             </div>
@@ -237,7 +216,7 @@ export default function AdminReviewsPage() {
                           รีวิว #{r.review_id}
                         </h2>
                         <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
-                          {r.review_status}
+                          รอตรวจสอบ
                         </span>
                       </div>
 
@@ -298,7 +277,7 @@ export default function AdminReviewsPage() {
                       className="inline-flex items-center gap-2 rounded-xl border border-green-200 bg-green-50 px-4 py-2.5 text-sm font-medium text-green-700 transition hover:bg-green-100 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       <CheckCircle2 className="h-4 w-4" />
-                      {actioningId === r.review_id ? "กำลังดำเนินการ..." : "Approve"}
+                      {actioningId === r.review_id ? "กำลังดำเนินการ..." : "อนุมัติ"}
                     </button>
 
                     <button
@@ -307,7 +286,7 @@ export default function AdminReviewsPage() {
                       className="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-medium text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       <XCircle className="h-4 w-4" />
-                      {actioningId === r.review_id ? "กำลังดำเนินการ..." : "Reject"}
+                      {actioningId === r.review_id ? "กำลังดำเนินการ..." : "ไม่อนุมัติ"}
                     </button>
 
                     <Link
@@ -322,6 +301,7 @@ export default function AdminReviewsPage() {
               );
             })}
           </div>
+
         </div>
       </div>
     </RequireAuth>
