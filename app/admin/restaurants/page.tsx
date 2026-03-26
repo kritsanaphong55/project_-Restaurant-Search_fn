@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   ChevronLeft,
-  RefreshCw,
   Store,
   Plus,
   Pencil,
@@ -23,6 +22,8 @@ import {
   Ban,
   Clock4,
   FileText,
+  Navigation,
+  Loader2,
 } from "lucide-react";
 import RequireAuth from "@/app/components/RequireAuth";
 import { apiFetch } from "@/src/lib/api";
@@ -98,11 +99,17 @@ const defaultForm: FormState = {
   close_time: "22:00",
 };
 
+const STATUS_LABELS: Record<RestaurantStatus, string> = {
+  APPROVED: "อนุมัติแล้ว",
+  PENDING: "รออนุมัติ",
+  REJECTED: "ไม่อนุมัติ",
+};
+
 function StatusBadge({ status }: { status: RestaurantStatus }) {
   if (status === "APPROVED") {
     return (
       <span className="inline-flex items-center rounded-full border border-green-200 bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
-        APPROVED
+        {STATUS_LABELS.APPROVED}
       </span>
     );
   }
@@ -110,14 +117,14 @@ function StatusBadge({ status }: { status: RestaurantStatus }) {
   if (status === "REJECTED") {
     return (
       <span className="inline-flex items-center rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-600">
-        REJECTED
+        {STATUS_LABELS.REJECTED}
       </span>
     );
   }
 
   return (
     <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
-      PENDING
+      {STATUS_LABELS.PENDING}
     </span>
   );
 }
@@ -129,6 +136,7 @@ export default function AdminRestaurantsPage() {
   const [msg, setMsg] = useState<string | null>(null);
   const [loadingList, setLoadingList] = useState(false);
   const [loadingForm, setLoadingForm] = useState(false);
+  const [locating, setLocating] = useState(false);
 
   const [form, setForm] = useState<FormState>(defaultForm);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -193,6 +201,28 @@ export default function AdminRestaurantsPage() {
     setForm(defaultForm);
     setEditingId(null);
     setMsg(null);
+  };
+
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      setMsg("เบราว์เซอร์ไม่รองรับการระบุตำแหน่ง");
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setForm((prev) => ({
+          ...prev,
+          latitude: String(pos.coords.latitude),
+          longitude: String(pos.coords.longitude),
+        }));
+        setLocating(false);
+      },
+      () => {
+        setMsg("ไม่สามารถดึงตำแหน่งได้ กรุณาอนุญาตการเข้าถึงตำแหน่ง");
+        setLocating(false);
+      }
+    );
   };
 
   const startEdit = (r: Restaurant) => {
@@ -297,110 +327,61 @@ export default function AdminRestaurantsPage() {
     };
   }, [items]);
 
+  const inputClass =
+    "w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-800 outline-none transition focus:border-orange-400 focus:bg-white focus:ring-2 focus:ring-orange-100";
+  const labelClass = "block text-xs font-medium text-gray-500 mb-1";
+
   return (
     <RequireAuth allow={["ADMIN"]}>
       <div className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-white">
-        <div className="mx-auto max-w-6xl px-4 py-8">
-          <div className="mb-6 rounded-3xl bg-gradient-to-r from-orange-500 to-orange-400 px-6 py-6 text-white shadow-lg">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div className="flex items-start gap-4">
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
-                  <Store className="h-7 w-7" />
-                </div>
+        <div className="mx-auto max-w-5xl px-4 py-8">
 
-                <div>
-                  <div className="mb-2">
-                    <Link
-                      href="/admin"
-                      className="inline-flex items-center gap-1 text-sm text-white/90 transition hover:text-white"
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                      กลับ Admin Dashboard
-                    </Link>
-                  </div>
-
-                  <h1 className="text-3xl font-bold leading-tight">
-                    จัดการร้านอาหาร
-                  </h1>
-                  <p className="mt-1 text-sm text-orange-50">
-                    เพิ่ม แก้ไข และลบข้อมูลร้านอาหารในระบบ
-                  </p>
-                  <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs text-white/90">
-                    <ShieldCheck className="h-3.5 w-3.5" />
-                    ส่วนจัดการร้านอาหารสำหรับผู้ดูแลระบบ
-                  </div>
-                </div>
+          {/* Header */}
+          <div className="mb-6 rounded-3xl bg-gradient-to-r from-orange-500 to-orange-400 px-6 py-5 text-white shadow-lg">
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
+                <Store className="h-6 w-6" />
               </div>
-
-              <button
-                onClick={() => void load()}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-orange-600 shadow-sm transition hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-60"
-                disabled={loadingList}
-              >
-                <RefreshCw className={`h-4 w-4 ${loadingList ? "animate-spin" : ""}`} />
-                รีเฟรช
-              </button>
-            </div>
-          </div>
-
-          <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <div className="rounded-2xl border border-orange-100 bg-white p-4 shadow-sm">
-              <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-orange-100 text-orange-500">
-                  <Store className="h-5 w-5" />
-                </div>
-                <div>
-                  <div className="text-sm text-gray-500">ร้านทั้งหมด</div>
-                  <div className="text-xl font-bold text-[#1F2937]">
-                    {summary.total}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-green-100 bg-white p-4 shadow-sm">
-              <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-green-100 text-green-600">
-                  <CheckCircle2 className="h-5 w-5" />
-                </div>
-                <div>
-                  <div className="text-sm text-gray-500">APPROVED</div>
-                  <div className="text-xl font-bold text-[#1F2937]">
-                    {summary.approved}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-amber-100 bg-white p-4 shadow-sm">
-              <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-100 text-amber-600">
-                  <Clock4 className="h-5 w-5" />
-                </div>
-                <div>
-                  <div className="text-sm text-gray-500">PENDING</div>
-                  <div className="text-xl font-bold text-[#1F2937]">
-                    {summary.pending}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-red-100 bg-white p-4 shadow-sm">
-              <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-100 text-red-600">
-                  <Ban className="h-5 w-5" />
-                </div>
-                <div>
-                  <div className="text-sm text-gray-500">REJECTED</div>
-                  <div className="text-xl font-bold text-[#1F2937]">
-                    {summary.rejected}
-                  </div>
+              <div>
+                <Link
+                  href="/admin"
+                  className="inline-flex items-center gap-1 text-xs text-white/80 transition hover:text-white"
+                >
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                  กลับ Admin Dashboard
+                </Link>
+                <h1 className="text-2xl font-bold leading-tight">จัดการร้านอาหาร</h1>
+                <div className="mt-1 inline-flex items-center gap-1.5 text-xs text-orange-100">
+                  <ShieldCheck className="h-3 w-3" />
+                  Admin Panel
                 </div>
               </div>
             </div>
           </div>
 
+          {/* Stats */}
+          <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {[
+              { label: "ทั้งหมด", value: summary.total, icon: Store, color: "orange" },
+              { label: STATUS_LABELS.APPROVED, value: summary.approved, icon: CheckCircle2, color: "green" },
+              { label: STATUS_LABELS.PENDING, value: summary.pending, icon: Clock4, color: "amber" },
+              { label: STATUS_LABELS.REJECTED, value: summary.rejected, icon: Ban, color: "red" },
+            ].map(({ label, value, icon: Icon, color }) => (
+              <div key={label} className={`rounded-2xl border border-${color}-100 bg-white p-3.5 shadow-sm`}>
+                <div className="flex items-center gap-2.5">
+                  <div className={`flex h-9 w-9 items-center justify-center rounded-xl bg-${color}-100 text-${color}-600`}>
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-400">{label}</div>
+                    <div className="text-lg font-bold text-gray-800">{value}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Message */}
           {msg && (
             <div
               className={`mb-4 rounded-2xl border px-4 py-3 text-sm ${
@@ -413,145 +394,179 @@ export default function AdminRestaurantsPage() {
             </div>
           )}
 
+          {/* Form */}
           <form
             onSubmit={submitForm}
-            className="rounded-3xl border border-orange-100 bg-white p-6 shadow-sm"
+            className="rounded-3xl border border-orange-100 bg-white p-5 shadow-sm mb-6"
           >
-            <div className="mb-5 flex items-center gap-2 text-lg font-bold text-[#1F2937]">
+            {/* Form title */}
+            <div className="mb-4 flex items-center gap-2 text-base font-bold text-gray-800">
               {editingId !== null ? (
-                <>
-                  <Pencil className="h-5 w-5 text-orange-500" />
-                  แก้ไขร้าน #{editingId}
-                </>
+                <><Pencil className="h-4 w-4 text-orange-500" />แก้ไขร้าน #{editingId}</>
               ) : (
-                <>
-                  <Plus className="h-5 w-5 text-orange-500" />
-                  เพิ่มร้านใหม่
-                </>
+                <><Plus className="h-4 w-4 text-orange-500" />เพิ่มร้านใหม่</>
               )}
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
-              <input
-                value={form.restaurant_name}
-                onChange={(e) => updateForm("restaurant_name", e.target.value)}
-                placeholder="ชื่อร้าน *"
-                required
-                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
-              />
-
-              <input
-                value={form.address}
-                onChange={(e) => updateForm("address", e.target.value)}
-                placeholder="ที่อยู่ *"
-                required
-                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
-              />
-
-              <input
-                value={form.latitude}
-                onChange={(e) => updateForm("latitude", e.target.value)}
-                placeholder="Latitude *"
-                required
-                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
-              />
-
-              <input
-                value={form.longitude}
-                onChange={(e) => updateForm("longitude", e.target.value)}
-                placeholder="Longitude *"
-                required
-                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
-              />
-
-              <input
-                value={form.price_min}
-                onChange={(e) => updateForm("price_min", e.target.value)}
-                placeholder="ราคาต่ำสุด"
-                type="number"
-                min="0"
-                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
-              />
-
-              <input
-                value={form.price_max}
-                onChange={(e) => updateForm("price_max", e.target.value)}
-                placeholder="ราคาสูงสุด"
-                type="number"
-                min="0"
-                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
-              />
-
-              <select
-                value={form.owner_id}
-                onChange={(e) => updateForm("owner_id", e.target.value)}
-                required
-                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
-              >
-                <option value="">เลือก Owner *</option>
-                {owners.map((owner) => (
-                  <option key={owner.user_id} value={owner.user_id}>
-                    {owner.full_name
-                      ? `${owner.full_name} (${owner.username})`
-                      : owner.username}
-                  </option>
-                ))}
-              </select>
-
-              <select
-                value={form.status}
-                onChange={(e) =>
-                  updateForm("status", e.target.value as RestaurantStatus)
-                }
-                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
-              >
-                <option value="APPROVED">APPROVED</option>
-                <option value="PENDING">PENDING</option>
-                <option value="REJECTED">REJECTED</option>
-              </select>
-
+            {/* Row 1: ชื่อร้าน + ที่อยู่ */}
+            <div className="grid gap-3 sm:grid-cols-2 mb-3">
               <div>
-                <label className="mb-2 block text-xs font-medium text-gray-500">
-                  เวลาเปิด
+                <label className={labelClass}>ชื่อร้าน *</label>
+                <input
+                  value={form.restaurant_name}
+                  onChange={(e) => updateForm("restaurant_name", e.target.value)}
+                  placeholder="กรอกชื่อร้าน"
+                  required
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className={labelClass}>ที่อยู่ *</label>
+                <input
+                  value={form.address}
+                  onChange={(e) => updateForm("address", e.target.value)}
+                  placeholder="กรอกที่อยู่"
+                  required
+                  className={inputClass}
+                />
+              </div>
+            </div>
+
+            {/* Row 2: พิกัด */}
+            <div className="mb-3 rounded-2xl border border-blue-100 bg-blue-50/50 p-3">
+              <div className="mb-2 flex items-center justify-between">
+                <label className="flex items-center gap-1.5 text-xs font-semibold text-blue-700">
+                  <MapPin className="h-3.5 w-3.5" />
+                  พิกัดร้าน
                 </label>
+                <button
+                  type="button"
+                  onClick={handleGetLocation}
+                  disabled={locating}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60"
+                >
+                  {locating ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <Navigation className="h-3 w-3" />
+                  )}
+                  {locating ? "กำลังระบุ..." : "ใช้ตำแหน่งปัจจุบัน"}
+                </button>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className={labelClass}>Latitude *</label>
+                  <input
+                    value={form.latitude}
+                    onChange={(e) => updateForm("latitude", e.target.value)}
+                    placeholder="เช่น 13.7563"
+                    required
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className={labelClass}>Longitude *</label>
+                  <input
+                    value={form.longitude}
+                    onChange={(e) => updateForm("longitude", e.target.value)}
+                    placeholder="เช่น 100.5018"
+                    required
+                    className={inputClass}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Row 3: ราคา + Owner + สถานะ */}
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 mb-3">
+              <div>
+                <label className={labelClass}>ราคาต่ำสุด (บาท)</label>
+                <input
+                  value={form.price_min}
+                  onChange={(e) => updateForm("price_min", e.target.value)}
+                  type="number"
+                  min="0"
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className={labelClass}>ราคาสูงสุด (บาท)</label>
+                <input
+                  value={form.price_max}
+                  onChange={(e) => updateForm("price_max", e.target.value)}
+                  type="number"
+                  min="0"
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className={labelClass}>เจ้าของร้าน *</label>
+                <select
+                  value={form.owner_id}
+                  onChange={(e) => updateForm("owner_id", e.target.value)}
+                  required
+                  className={inputClass}
+                >
+                  <option value="">เลือก Owner</option>
+                  {owners.map((owner) => (
+                    <option key={owner.user_id} value={owner.user_id}>
+                      {owner.full_name ? `${owner.full_name} (${owner.username})` : owner.username}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className={labelClass}>สถานะ</label>
+                <select
+                  value={form.status}
+                  onChange={(e) => updateForm("status", e.target.value as RestaurantStatus)}
+                  className={inputClass}
+                >
+                  <option value="APPROVED">{STATUS_LABELS.APPROVED}</option>
+                  <option value="PENDING">{STATUS_LABELS.PENDING}</option>
+                  <option value="REJECTED">{STATUS_LABELS.REJECTED}</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Row 4: เวลา */}
+            <div className="grid grid-cols-2 gap-3 mb-3">
+              <div>
+                <label className={labelClass}>เวลาเปิด</label>
                 <input
                   type="time"
                   value={form.open_time}
                   onChange={(e) => updateForm("open_time", e.target.value)}
-                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
+                  className={inputClass}
                 />
               </div>
-
               <div>
-                <label className="mb-2 block text-xs font-medium text-gray-500">
-                  เวลาปิด
-                </label>
+                <label className={labelClass}>เวลาปิด</label>
                 <input
                   type="time"
                   value={form.close_time}
                   onChange={(e) => updateForm("close_time", e.target.value)}
-                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
+                  className={inputClass}
                 />
               </div>
             </div>
 
-            <div className="mt-5">
-              <div className="mb-3 flex items-center gap-2 text-sm font-medium text-gray-700">
-                <HandPlatter className="h-4 w-4 text-orange-400" />
-                ประเภทอาหาร (เลือกได้หลายอย่าง)
+            {/* Food types */}
+            <div className="mb-3">
+              <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-gray-600">
+                <HandPlatter className="h-3.5 w-3.5 text-orange-400" />
+                ประเภทอาหาร
               </div>
-
-              <div className="flex flex-wrap gap-3 rounded-2xl border border-orange-100 bg-orange-50/50 p-4">
+              <div className="flex flex-wrap gap-2 rounded-xl border border-orange-100 bg-orange-50/40 p-3">
                 {foodTypes.map((ft) => {
                   const selected = form.foodtype_ids.includes(ft.foodtype_id);
-
                   return (
                     <label
                       key={ft.foodtype_id}
-                      className={`inline-flex cursor-pointer select-none items-center gap-2 rounded-full px-4 py-2 text-sm transition ${
+                      className={`inline-flex cursor-pointer select-none items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition ${
                         selected
-                          ? "border border-orange-300 bg-orange-100 font-medium text-orange-700"
-                          : "border border-gray-200 bg-white text-gray-600 hover:border-orange-200 hover:text-orange-600"
+                          ? "border border-orange-300 bg-orange-100 text-orange-700"
+                          : "border border-gray-200 bg-white text-gray-500 hover:border-orange-200 hover:text-orange-600"
                       }`}
                     >
                       <input
@@ -560,7 +575,7 @@ export default function AdminRestaurantsPage() {
                         onChange={() => toggleFoodType(ft.foodtype_id)}
                         className="hidden"
                       />
-                      {selected ? "✓" : ""}
+                      {selected && <span className="text-orange-500">✓</span>}
                       {ft.foodtype_name}
                     </label>
                   );
@@ -568,43 +583,41 @@ export default function AdminRestaurantsPage() {
               </div>
             </div>
 
-            <div className="mt-5">
-              <div className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
-                <FileText className="h-4 w-4 text-orange-400" />
+            {/* Description */}
+            <div className="mb-4">
+              <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-gray-600">
+                <FileText className="h-3.5 w-3.5 text-orange-400" />
                 รายละเอียดร้าน
-              </div>
-
+              </label>
               <textarea
                 value={form.description}
                 onChange={(e) => updateForm("description", e.target.value)}
-                placeholder="รายละเอียดร้าน"
-                className="min-h-[100px] w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
+                placeholder="รายละเอียดร้าน (ไม่บังคับ)"
+                rows={2}
+                className={`${inputClass} resize-none`}
               />
             </div>
 
-            <div className="mt-5 flex flex-wrap gap-3">
+            {/* Actions */}
+            <div className="flex flex-wrap gap-2">
               <button
                 type="submit"
                 disabled={loadingForm}
-                className={`inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white shadow-md transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition disabled:opacity-60 ${
                   editingId !== null
                     ? "bg-orange-500 hover:bg-orange-600"
                     : "bg-green-600 hover:bg-green-700"
                 }`}
               >
                 {editingId !== null ? <Save className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-                {loadingForm
-                  ? "กำลังบันทึก..."
-                  : editingId !== null
-                  ? "บันทึกการแก้ไข"
-                  : "เพิ่มร้าน"}
+                {loadingForm ? "กำลังบันทึก..." : editingId !== null ? "บันทึกการแก้ไข" : "เพิ่มร้าน"}
               </button>
 
               {editingId !== null && (
                 <button
                   type="button"
                   onClick={resetForm}
-                  className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-5 py-3 text-sm font-medium text-gray-700 transition hover:border-orange-300 hover:text-orange-600"
+                  className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 transition hover:border-orange-300 hover:text-orange-600"
                 >
                   <X className="h-4 w-4" />
                   ยกเลิก
@@ -613,40 +626,36 @@ export default function AdminRestaurantsPage() {
             </div>
           </form>
 
+          {/* Loading */}
           {loadingList && (
-            <div className="mt-5 flex items-center gap-2 rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm text-gray-500">
+            <div className="mb-4 flex items-center gap-2 rounded-2xl border border-orange-100 bg-white px-4 py-3 text-sm text-gray-500">
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-orange-400 border-t-transparent" />
               กำลังโหลดข้อมูล...
             </div>
           )}
 
-          <div className="mt-6 grid gap-5">
+          {/* List */}
+          <div className="grid gap-4">
             {items.map((r) => (
               <div
                 key={r.restaurant_id}
                 className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-orange-200 hover:shadow-md"
               >
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="text-xl font-bold text-[#1F2937]">
-                        {r.restaurant_name}
-                      </h2>
-                      <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-500">
-                        #{r.restaurant_id}
-                      </span>
-                    </div>
+                <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="text-lg font-bold text-gray-800">{r.restaurant_name}</h2>
+                    <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-400">
+                      #{r.restaurant_id}
+                    </span>
                   </div>
-
                   <StatusBadge status={r.status} />
                 </div>
 
-                <div className="mt-4 grid gap-2 text-sm text-gray-600">
+                <div className="grid gap-1.5 text-sm text-gray-500">
                   <div className="inline-flex items-start gap-2">
                     <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-orange-400" />
                     <span>{r.address}</span>
                   </div>
-
                   <div className="inline-flex items-start gap-2">
                     <HandPlatter className="mt-0.5 h-4 w-4 shrink-0 text-orange-400" />
                     <span>
@@ -655,66 +664,57 @@ export default function AdminRestaurantsPage() {
                         : "-"}
                     </span>
                   </div>
-
                   <div className="inline-flex items-center gap-2">
                     <Clock3 className="h-4 w-4 shrink-0 text-orange-400" />
                     <span>
-                      {r.open_time || "-"} - {r.close_time || "-"} {" | "}
-                      <span
-                        className={`font-semibold ${
-                          r.is_open_now ? "text-green-600" : "text-red-600"
-                        }`}
-                      >
-                        {r.is_open_now ? "เปิดอยู่" : "ปิดอยู่"}
+                      {r.open_time || "-"} - {r.close_time || "-"}{" "}
+                      <span className={`font-semibold ${r.is_open_now ? "text-green-600" : "text-red-500"}`}>
+                        {r.is_open_now ? "• เปิดอยู่" : "• ปิดอยู่"}
                       </span>
                     </span>
                   </div>
-
                   <div className="inline-flex items-center gap-2">
                     <Wallet className="h-4 w-4 shrink-0 text-orange-400" />
-                    <span>
-                      {r.price_min} - {r.price_max} บาท
-                    </span>
+                    <span>{r.price_min} - {r.price_max} บาท</span>
                   </div>
-
                   <div className="inline-flex items-center gap-2">
                     <User className="h-4 w-4 shrink-0 text-orange-400" />
                     <span>Owner: {ownerLabel(r.owner_id)}</span>
                   </div>
                 </div>
 
-                <div className="mt-5 flex flex-wrap gap-3">
+                <div className="mt-4 flex flex-wrap gap-2">
                   <button
                     onClick={() => startEdit(r)}
                     disabled={loadingList}
-                    className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:border-orange-300 hover:text-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3.5 py-2 text-xs font-medium text-gray-700 transition hover:border-orange-300 hover:text-orange-600 disabled:opacity-60"
                   >
-                    <Pencil className="h-4 w-4" />
+                    <Pencil className="h-3.5 w-3.5" />
                     แก้ไข
                   </button>
 
                   <button
                     onClick={() => void removeRestaurant(r.restaurant_id)}
                     disabled={loadingList}
-                    className="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-medium text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-3.5 py-2 text-xs font-medium text-red-600 transition hover:bg-red-100 disabled:opacity-60"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-3.5 w-3.5" />
                     ลบ
                   </button>
 
                   <Link
                     href={`/restaurants/${r.restaurant_id}?back=/admin/restaurants`}
-                    className="inline-flex items-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-4 py-2.5 text-sm font-medium text-orange-600 transition hover:bg-orange-100"
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-orange-200 bg-orange-50 px-3.5 py-2 text-xs font-medium text-orange-600 transition hover:bg-orange-100"
                   >
-                    <Eye className="h-4 w-4" />
+                    <Eye className="h-3.5 w-3.5" />
                     ดูหน้าร้าน
                   </Link>
                 </div>
 
                 {r.status === "PENDING" && (
-                  <div className="mt-4 inline-flex w-full items-start gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-                    <span>ร้านนี้ยังรอการอนุมัติจากระบบ</span>
+                  <div className="mt-3 inline-flex w-full items-start gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-xs text-amber-700">
+                    <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                    ร้านนี้ยังรอการอนุมัติจากระบบ
                   </div>
                 )}
               </div>
