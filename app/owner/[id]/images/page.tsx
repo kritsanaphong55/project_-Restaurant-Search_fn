@@ -8,8 +8,7 @@ import {
   ChevronLeft,
   Images,
   Upload,
-  RefreshCw,
-  Store,
+  
   ImageIcon,
   Trash2,
   FileText,
@@ -169,36 +168,19 @@ export default function OwnerImagesPage() {
                 </Link>
               </div>
 
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-start gap-4">
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
-                    <Images className="h-7 w-7" />
-                  </div>
-
-                  <div>
-                    <h1 className="text-3xl font-bold leading-tight">
-                      จัดการรูปภาพร้าน
-                    </h1>
-                    <p className="mt-1 text-sm text-orange-50">
-                      ร้าน #{restaurantId}
-                    </p>
-                    <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs text-white/90">
-                      <Store className="h-3.5 w-3.5" />
-                      อัปโหลดและลบรูปภาพของร้าน
-                    </div>
-                  </div>
+              {/* ── Header: ไม่มี badge และปุ่มรีเฟรช ── */}
+              <div className="flex items-start gap-4">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
+                  <Images className="h-7 w-7" />
                 </div>
-
-                <button
-                  onClick={() => void load()}
-                  disabled={loadingList}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-orange-600 shadow-sm transition hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  <RefreshCw
-                    className={`h-4 w-4 ${loadingList ? "animate-spin" : ""}`}
-                  />
-                  รีเฟรช
-                </button>
+                <div>
+                  <h1 className="text-3xl font-bold leading-tight">
+                    จัดการรูปภาพร้าน
+                  </h1>
+                  <p className="mt-1 text-sm text-orange-100">
+                    ร้าน #{restaurantId}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
