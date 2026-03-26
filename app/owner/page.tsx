@@ -83,6 +83,93 @@ function toInputTime(value?: string | null) {
   return String(value).slice(0, 5);
 }
 
+/* ─── Reusable field components ─── */
+function FieldLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <label className="mb-1 block text-[11px] font-medium uppercase tracking-wide text-gray-400">
+      {children}
+    </label>
+  );
+}
+
+function TextInput({
+  value,
+  onChange,
+  disabled,
+  placeholder,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  disabled?: boolean;
+  placeholder?: string;
+}) {
+  return (
+    <input
+      type="text"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      disabled={disabled}
+      placeholder={placeholder}
+      className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100 disabled:bg-gray-50 disabled:text-gray-400"
+    />
+  );
+}
+
+function NumberInput({
+  value,
+  onChange,
+  disabled,
+  placeholder,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  disabled?: boolean;
+  placeholder?: string;
+}) {
+  return (
+    <input
+      type="number"
+      min={0}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      disabled={disabled}
+      placeholder={placeholder}
+      className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100 disabled:bg-gray-50 disabled:text-gray-400"
+    />
+  );
+}
+
+function TimeInput({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <input
+      type="time"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      disabled={disabled}
+      className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100 disabled:bg-gray-50 disabled:text-gray-400"
+    />
+  );
+}
+
+function SectionDivider({ label }: { label: string }) {
+  return (
+    <div className="flex items-center gap-2 py-1">
+      <span className="text-[10px] font-semibold uppercase tracking-widest text-gray-300">
+        {label}
+      </span>
+      <div className="h-px flex-1 bg-gray-100" />
+    </div>
+  );
+}
+
 export default function OwnerPage() {
   const [items, setItems] = useState<Restaurant[]>([]);
   const [msg, setMsg] = useState<string | null>(null);
@@ -120,17 +207,23 @@ export default function OwnerPage() {
     }
   }, []);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    void load();
+  }, [load]);
 
   const toggleActive = async (restaurantId: number) => {
     if (actioningId !== null) return;
     setMsg(null);
     setActioningId(restaurantId);
     try {
-      await apiFetch(`/api/restaurants/${restaurantId}/toggle-active`, { method: "PATCH" });
+      await apiFetch(`/api/restaurants/${restaurantId}/toggle-active`, {
+        method: "PATCH",
+      });
       await load();
     } catch (e: unknown) {
-      showMsg(e instanceof Error ? e.message : "เปลี่ยนสถานะร้านไม่สำเร็จ");
+      showMsg(
+        e instanceof Error ? e.message : "เปลี่ยนสถานะร้านไม่สำเร็จ"
+      );
     } finally {
       setActioningId(null);
     }
@@ -145,8 +238,16 @@ export default function OwnerPage() {
     setEditCloseTime(toInputTime(restaurant.close_time));
     setEditPriceMin(String(restaurant.price_min ?? 0));
     setEditPriceMax(String(restaurant.price_max ?? 0));
-    setEditLatitude(restaurant.latitude !== null && restaurant.latitude !== undefined ? String(restaurant.latitude) : "");
-    setEditLongitude(restaurant.longitude !== null && restaurant.longitude !== undefined ? String(restaurant.longitude) : "");
+    setEditLatitude(
+      restaurant.latitude !== null && restaurant.latitude !== undefined
+        ? String(restaurant.latitude)
+        : ""
+    );
+    setEditLongitude(
+      restaurant.longitude !== null && restaurant.longitude !== undefined
+        ? String(restaurant.longitude)
+        : ""
+    );
   };
 
   const cancelEditRestaurant = () => {
@@ -171,11 +272,26 @@ export default function OwnerPage() {
     const latitudeNum = Number(editLatitude);
     const longitudeNum = Number(editLongitude);
 
-    if (!restaurantName || !address) { showMsg("กรุณากรอกชื่อร้านและที่อยู่"); return; }
-    if (!Number.isFinite(priceMinNum) || !Number.isFinite(priceMaxNum)) { showMsg("ราคาต้องเป็นตัวเลข"); return; }
-    if (priceMinNum < 0 || priceMaxNum < 0) { showMsg("ราคาต้องไม่ติดลบ"); return; }
-    if (priceMinNum > priceMaxNum) { showMsg("ราคาต่ำสุดต้องไม่มากกว่าราคาสูงสุด"); return; }
-    if (!Number.isFinite(latitudeNum) || !Number.isFinite(longitudeNum)) { showMsg("กรุณากรอก latitude และ longitude ให้ถูกต้อง"); return; }
+    if (!restaurantName || !address) {
+      showMsg("กรุณากรอกชื่อร้านและที่อยู่");
+      return;
+    }
+    if (!Number.isFinite(priceMinNum) || !Number.isFinite(priceMaxNum)) {
+      showMsg("ราคาต้องเป็นตัวเลข");
+      return;
+    }
+    if (priceMinNum < 0 || priceMaxNum < 0) {
+      showMsg("ราคาต้องไม่ติดลบ");
+      return;
+    }
+    if (priceMinNum > priceMaxNum) {
+      showMsg("ราคาต่ำสุดต้องไม่มากกว่าราคาสูงสุด");
+      return;
+    }
+    if (!Number.isFinite(latitudeNum) || !Number.isFinite(longitudeNum)) {
+      showMsg("กรุณากรอก latitude และ longitude ให้ถูกต้อง");
+      return;
+    }
 
     setActioningId(restaurant.restaurant_id);
     try {
@@ -192,25 +308,31 @@ export default function OwnerPage() {
           price_min: priceMinNum,
           price_max: priceMaxNum,
           foodtype_ids: Array.isArray(restaurant.food_types)
-            ? restaurant.food_types.map((ft) => ft.foodtype_id) : [],
+            ? restaurant.food_types.map((ft) => ft.foodtype_id)
+            : [],
         }),
       });
       showMsg("แก้ไขข้อมูลร้านสำเร็จ", true);
       cancelEditRestaurant();
       await load();
     } catch (e: unknown) {
-      showMsg(e instanceof Error ? e.message : "แก้ไขข้อมูลร้านไม่สำเร็จ");
+      showMsg(
+        e instanceof Error ? e.message : "แก้ไขข้อมูลร้านไม่สำเร็จ"
+      );
     } finally {
       setActioningId(null);
     }
   };
 
-  const summary = useMemo(() => ({
-    total: items.length,
-    approved: items.filter((r) => r.status === "APPROVED").length,
-    pending: items.filter((r) => r.status === "PENDING").length,
-    rejected: items.filter((r) => r.status === "REJECTED").length,
-  }), [items]);
+  const summary = useMemo(
+    () => ({
+      total: items.length,
+      approved: items.filter((r) => r.status === "APPROVED").length,
+      pending: items.filter((r) => r.status === "PENDING").length,
+      rejected: items.filter((r) => r.status === "REJECTED").length,
+    }),
+    [items]
+  );
 
   return (
     <RequireAuth allow={["OWNER"]}>
@@ -225,10 +347,11 @@ export default function OwnerPage() {
                   <LayoutDashboard className="h-7 w-7" />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold leading-tight">Owner Dashboard</h1>
+                  <h1 className="text-3xl font-bold leading-tight">
+                    Owner Dashboard
+                  </h1>
                 </div>
               </div>
-
               <Link
                 href="/owner/new-restaurant"
                 className="inline-flex items-center gap-2 rounded-xl border border-white/30 bg-white/15 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/20"
@@ -248,7 +371,9 @@ export default function OwnerPage() {
                 </div>
                 <div>
                   <div className="text-sm text-gray-500">ร้านทั้งหมด</div>
-                  <div className="text-xl font-bold text-[#1F2937]">{summary.total}</div>
+                  <div className="text-xl font-bold text-[#1F2937]">
+                    {summary.total}
+                  </div>
                 </div>
               </div>
             </div>
@@ -259,9 +384,10 @@ export default function OwnerPage() {
                   <CheckCircle2 className="h-5 w-5" />
                 </div>
                 <div>
-                  {/* ✅ เปลี่ยนเป็นภาษาไทยชัดเจน */}
-                  <div className="text-sm text-gray-500">ร้านที่ผ่านการอนุมัติ</div>
-                  <div className="text-xl font-bold text-[#1F2937]">{summary.approved}</div>
+                  <div className="text-sm text-gray-500">ผ่านการอนุมัติ</div>
+                  <div className="text-xl font-bold text-[#1F2937]">
+                    {summary.approved}
+                  </div>
                 </div>
               </div>
             </div>
@@ -272,9 +398,10 @@ export default function OwnerPage() {
                   <Clock4 className="h-5 w-5" />
                 </div>
                 <div>
-                  {/* ✅ เปลี่ยนเป็นภาษาไทยชัดเจน */}
                   <div className="text-sm text-gray-500">รอการตรวจสอบ</div>
-                  <div className="text-xl font-bold text-[#1F2937]">{summary.pending}</div>
+                  <div className="text-xl font-bold text-[#1F2937]">
+                    {summary.pending}
+                  </div>
                 </div>
               </div>
             </div>
@@ -285,18 +412,23 @@ export default function OwnerPage() {
                   <Ban className="h-5 w-5" />
                 </div>
                 <div>
-                  {/* ✅ เปลี่ยนเป็นภาษาไทยชัดเจน */}
                   <div className="text-sm text-gray-500">ไม่ผ่านการอนุมัติ</div>
-                  <div className="text-xl font-bold text-[#1F2937]">{summary.rejected}</div>
+                  <div className="text-xl font-bold text-[#1F2937]">
+                    {summary.rejected}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
           {msg && (
-            <div className={`mb-4 rounded-2xl border px-4 py-3 text-sm ${
-              success ? "border-green-200 bg-green-50 text-green-700" : "border-red-200 bg-red-50 text-red-600"
-            }`}>
+            <div
+              className={`mb-4 rounded-2xl border px-4 py-3 text-sm ${
+                success
+                  ? "border-green-200 bg-green-50 text-green-700"
+                  : "border-red-200 bg-red-50 text-red-600"
+              }`}
+            >
               {msg}
             </div>
           )}
@@ -313,7 +445,9 @@ export default function OwnerPage() {
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-orange-50 text-orange-500">
                 <Store className="h-8 w-8" />
               </div>
-              <h2 className="text-lg font-semibold text-[#1F2937]">ยังไม่มีร้านอาหาร</h2>
+              <h2 className="text-lg font-semibold text-[#1F2937]">
+                ยังไม่มีร้านอาหาร
+              </h2>
               <p className="mt-2 text-sm text-gray-500">
                 เริ่มเพิ่มร้านแรกของคุณเพื่อให้ผู้ใช้งานสามารถค้นหาและดูข้อมูลร้านได้
               </p>
@@ -338,13 +472,17 @@ export default function OwnerPage() {
                 <div
                   key={r.restaurant_id}
                   className={`rounded-3xl border bg-white p-5 shadow-sm transition ${
-                    isActioning ? "border-orange-200 opacity-70" : "border-gray-100 hover:border-orange-200 hover:shadow-md"
+                    isActioning
+                      ? "border-orange-200 opacity-70"
+                      : "border-gray-100 hover:border-orange-200 hover:shadow-md"
                   }`}
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h2 className="text-xl font-bold text-[#1F2937]">{r.restaurant_name}</h2>
+                        <h2 className="text-xl font-bold text-[#1F2937]">
+                          {r.restaurant_name}
+                        </h2>
                         <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-500">
                           #{r.restaurant_id}
                         </span>
@@ -366,11 +504,15 @@ export default function OwnerPage() {
                         </div>
                         <div className="inline-flex items-center gap-2">
                           <Clock3 className="h-4 w-4 shrink-0 text-orange-400" />
-                          <span>{r.open_time || "-"} – {r.close_time || "-"}</span>
+                          <span>
+                            {r.open_time || "-"} – {r.close_time || "-"}
+                          </span>
                         </div>
                         <div className="inline-flex items-center gap-2">
                           <Wallet className="h-4 w-4 shrink-0 text-orange-400" />
-                          <span>{r.price_min} – {r.price_max} บาท</span>
+                          <span>
+                            {r.price_min} – {r.price_max} บาท
+                          </span>
                         </div>
                         <div className="inline-flex items-start gap-2">
                           <FileText className="mt-0.5 h-4 w-4 shrink-0 text-orange-400" />
@@ -382,14 +524,24 @@ export default function OwnerPage() {
                         <div className="inline-flex items-center gap-2 rounded-full bg-gray-50 px-3 py-1.5">
                           <Power className="h-4 w-4 text-orange-400" />
                           <span className="text-gray-600">สถานะร้าน:</span>
-                          <span className={`font-semibold ${r.is_active ? "text-green-600" : "text-red-600"}`}>
+                          <span
+                            className={`font-semibold ${
+                              r.is_active ? "text-green-600" : "text-red-600"
+                            }`}
+                          >
                             {r.is_active ? "เปิดให้บริการ" : "ปิดชั่วคราว"}
                           </span>
                         </div>
                         <div className="inline-flex items-center gap-2 rounded-full bg-gray-50 px-3 py-1.5">
                           <CircleDot className="h-4 w-4 text-orange-400" />
                           <span className="text-gray-600">ตอนนี้:</span>
-                          <span className={`font-semibold ${r.is_open_now ? "text-green-600" : "text-gray-500"}`}>
+                          <span
+                            className={`font-semibold ${
+                              r.is_open_now
+                                ? "text-green-600"
+                                : "text-gray-500"
+                            }`}
+                          >
                             {r.is_open_now ? "เปิดอยู่" : "ปิดอยู่"}
                           </span>
                         </div>
@@ -408,7 +560,11 @@ export default function OwnerPage() {
                           }`}
                         >
                           <Power className="h-4 w-4" />
-                          {isActioning ? "กำลังดำเนินการ..." : r.is_active ? "ปิดร้านชั่วคราว" : "เปิดร้าน"}
+                          {isActioning
+                            ? "กำลังดำเนินการ..."
+                            : r.is_active
+                            ? "ปิดร้านชั่วคราว"
+                            : "เปิดร้าน"}
                         </button>
 
                         <button
@@ -446,139 +602,149 @@ export default function OwnerPage() {
                       </div>
                     </>
                   ) : (
-                    <div className="mt-4 rounded-2xl border border-orange-100 bg-orange-50/50 p-4">
-                      <div className="grid gap-4 md:grid-cols-2">
-                        <div className="md:col-span-2">
-                          <label className="mb-2 block text-sm font-medium text-gray-700">ชื่อร้าน</label>
-                          <input
+                    /* ─────────────────── EDIT FORM ─────────────────── */
+                    <div className="mt-4 rounded-2xl border border-gray-100 bg-gray-50/60 p-4">
+
+                      {/* ── ข้อมูลทั่วไป ── */}
+                      <SectionDivider label="ข้อมูลทั่วไป" />
+                      <div className="mt-2 mb-3 grid gap-3">
+                        <div>
+                          <FieldLabel>ชื่อร้าน</FieldLabel>
+                          <TextInput
                             value={editRestaurantName}
-                            onChange={(e) => setEditRestaurantName(e.target.value)}
+                            onChange={setEditRestaurantName}
                             disabled={isActioning}
-                            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
+                            placeholder="ชื่อร้าน"
                           />
                         </div>
-
-                        <div className="md:col-span-2">
-                          <label className="mb-2 block text-sm font-medium text-gray-700">รายละเอียดร้าน</label>
+                        <div>
+                          <FieldLabel>รายละเอียด</FieldLabel>
                           <textarea
                             value={editDescription}
                             onChange={(e) => setEditDescription(e.target.value)}
                             disabled={isActioning}
-                            rows={3}
-                            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
-                          />
-                        </div>
-
-                        <div className="md:col-span-2">
-                          <label className="mb-2 block text-sm font-medium text-gray-700">ที่อยู่</label>
-                          <input
-                            value={editAddress}
-                            onChange={(e) => setEditAddress(e.target.value)}
-                            disabled={isActioning}
-                            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="mb-2 block text-sm font-medium text-gray-700">เวลาเปิด</label>
-                          <input
-                            type="time"
-                            value={editOpenTime}
-                            onChange={(e) => setEditOpenTime(e.target.value)}
-                            disabled={isActioning}
-                            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="mb-2 block text-sm font-medium text-gray-700">เวลาปิด</label>
-                          <input
-                            type="time"
-                            value={editCloseTime}
-                            onChange={(e) => setEditCloseTime(e.target.value)}
-                            disabled={isActioning}
-                            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="mb-2 block text-sm font-medium text-gray-700">ราคาต่ำสุด</label>
-                          <input
-                            type="number"
-                            min={0}
-                            value={editPriceMin}
-                            onChange={(e) => setEditPriceMin(e.target.value)}
-                            disabled={isActioning}
-                            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="mb-2 block text-sm font-medium text-gray-700">ราคาสูงสุด</label>
-                          <input
-                            type="number"
-                            min={0}
-                            value={editPriceMax}
-                            onChange={(e) => setEditPriceMax(e.target.value)}
-                            disabled={isActioning}
-                            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="mb-2 block text-sm font-medium text-gray-700">Latitude</label>
-                          <input
-                            value={editLatitude}
-                            onChange={(e) => setEditLatitude(e.target.value)}
-                            disabled={isActioning}
-                            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="mb-2 block text-sm font-medium text-gray-700">Longitude</label>
-                          <input
-                            value={editLongitude}
-                            onChange={(e) => setEditLongitude(e.target.value)}
-                            disabled={isActioning}
-                            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
+                            rows={2}
+                            placeholder="รายละเอียดร้าน..."
+                            className="w-full resize-none rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100 disabled:bg-gray-50 disabled:text-gray-400"
                           />
                         </div>
                       </div>
 
-                      <div className="mt-4 flex flex-wrap gap-3">
+                      {/* ── ที่ตั้ง ── */}
+                      <SectionDivider label="ที่ตั้ง" />
+                      <div className="mt-2 mb-3 grid gap-3">
+                        <div>
+                          <FieldLabel>ที่อยู่</FieldLabel>
+                          <TextInput
+                            value={editAddress}
+                            onChange={setEditAddress}
+                            disabled={isActioning}
+                            placeholder="ที่อยู่"
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <FieldLabel>Latitude</FieldLabel>
+                            <TextInput
+                              value={editLatitude}
+                              onChange={setEditLatitude}
+                              disabled={isActioning}
+                              placeholder="เช่น 8.4304"
+                            />
+                          </div>
+                          <div>
+                            <FieldLabel>Longitude</FieldLabel>
+                            <TextInput
+                              value={editLongitude}
+                              onChange={setEditLongitude}
+                              disabled={isActioning}
+                              placeholder="เช่น 99.9633"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* ── เวลาและราคา ── */}
+                      <SectionDivider label="เวลาและราคา" />
+                      <div className="mt-2 mb-4 grid gap-3">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <FieldLabel>เวลาเปิด</FieldLabel>
+                            <TimeInput
+                              value={editOpenTime}
+                              onChange={setEditOpenTime}
+                              disabled={isActioning}
+                            />
+                          </div>
+                          <div>
+                            <FieldLabel>เวลาปิด</FieldLabel>
+                            <TimeInput
+                              value={editCloseTime}
+                              onChange={setEditCloseTime}
+                              disabled={isActioning}
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <FieldLabel>ราคาต่ำสุด (บาท)</FieldLabel>
+                            <NumberInput
+                              value={editPriceMin}
+                              onChange={setEditPriceMin}
+                              disabled={isActioning}
+                              placeholder="0"
+                            />
+                          </div>
+                          <div>
+                            <FieldLabel>ราคาสูงสุด (บาท)</FieldLabel>
+                            <NumberInput
+                              value={editPriceMax}
+                              onChange={setEditPriceMax}
+                              disabled={isActioning}
+                              placeholder="0"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* ── Actions ── */}
+                      <div className="flex flex-wrap gap-2">
                         <button
                           onClick={() => void saveEditRestaurant(r)}
                           disabled={isActioning}
-                          className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-orange-300"
+                          className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-orange-300"
                         >
                           <Save className="h-4 w-4" />
                           {isActioning ? "กำลังบันทึก..." : "บันทึก"}
                         </button>
-
                         <button
                           onClick={cancelEditRestaurant}
                           disabled={isActioning}
-                          className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:border-orange-300 hover:text-orange-600 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
+                          className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 transition hover:border-orange-300 hover:text-orange-600 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
                         >
                           <X className="h-4 w-4" />
                           ยกเลิก
                         </button>
                       </div>
                     </div>
+                    /* ─────────────────── END EDIT FORM ─────────────────── */
                   )}
 
                   {r.status === "PENDING" && !isEditing && (
                     <div className="mt-4 inline-flex w-full items-start gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
                       <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-                      <span>ร้านนี้รอ Admin อนุมัติ ยังไม่แสดงในระบบค้นหา</span>
+                      <span>
+                        ร้านนี้รอ Admin อนุมัติ ยังไม่แสดงในระบบค้นหา
+                      </span>
                     </div>
                   )}
 
                   {r.status === "REJECTED" && !isEditing && (
                     <div className="mt-4 inline-flex w-full items-start gap-2 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
                       <XCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                      <span>ร้านนี้ถูกปฏิเสธโดย Admin กรุณาติดต่อผู้ดูแลระบบ</span>
+                      <span>
+                        ร้านนี้ถูกปฏิเสธโดย Admin กรุณาติดต่อผู้ดูแลระบบ
+                      </span>
                     </div>
                   )}
                 </div>
