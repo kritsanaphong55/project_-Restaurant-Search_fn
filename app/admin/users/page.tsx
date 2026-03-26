@@ -5,9 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   ChevronLeft,
-  RefreshCw,
   Users,
-  Shield,
   User,
   Mail,
   Phone,
@@ -154,46 +152,27 @@ export default function AdminUsersPage() {
     <RequireAuth allow={["ADMIN"]}>
       <div className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-white">
         <div className="mx-auto max-w-6xl px-4 py-8">
+
           {/* Header */}
           <div className="mb-6 rounded-3xl bg-gradient-to-r from-orange-500 to-orange-400 px-6 py-6 text-white shadow-lg">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div className="flex items-start gap-4">
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
-                  <Users className="h-7 w-7" />
-                </div>
-
-                <div>
-                  <div className="mb-2">
-                    <Link
-                      href="/admin"
-                      className="inline-flex items-center gap-1 text-sm text-white/90 transition hover:text-white"
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                      กลับ Admin Dashboard
-                    </Link>
-                  </div>
-
-                  <h1 className="text-3xl font-bold leading-tight">
-                    จัดการผู้ใช้
-                  </h1>
-                  <p className="mt-1 text-sm text-orange-50">
-                    แก้ไขข้อมูลผู้ใช้ เปลี่ยนสิทธิ์ และลบบัญชีผู้ใช้ในระบบ
-                  </p>
-                  <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs text-white/90">
-                    <Shield className="h-3.5 w-3.5" />
-                    ส่วนจัดการผู้ใช้สำหรับผู้ดูแลระบบ
-                  </div>
-                </div>
+            <div className="flex items-start gap-4">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
+                <Users className="h-7 w-7" />
               </div>
-
-              <button
-                onClick={() => void load()}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-orange-600 shadow-sm transition hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-60"
-                disabled={loading}
-              >
-                <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-                รีเฟรช
-              </button>
+              <div>
+                <div className="mb-2">
+                  <Link
+                    href="/admin"
+                    className="inline-flex items-center gap-1 text-sm text-white/90 transition hover:text-white"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    กลับ Admin Dashboard
+                  </Link>
+                </div>
+                <h1 className="text-3xl font-bold leading-tight">
+                  จัดการผู้ใช้
+                </h1>
+              </div>
             </div>
           </div>
 
@@ -419,6 +398,7 @@ export default function AdminUsersPage() {
               </div>
             ))}
           </div>
+
         </div>
       </div>
     </RequireAuth>
