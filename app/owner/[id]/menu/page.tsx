@@ -12,8 +12,7 @@ import {
   PackageCheck,
   PackageX,
   Trash2,
-  RefreshCw,
-  Store,
+
   Pencil,
   Images,
   Save,
@@ -282,34 +281,15 @@ export default function OwnerMenuPage() {
                 </Link>
               </div>
 
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-start gap-4">
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
-                    <Soup className="h-7 w-7" />
-                  </div>
-
-                  <div>
-                    <h1 className="text-3xl font-bold leading-tight">
-                      จัดการเมนู
-                    </h1>
-                    <p className="mt-1 text-sm text-orange-50">ร้าน #{restaurantId}</p>
-                    <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs text-white/90">
-                      <Store className="h-3.5 w-3.5" />
-                      เพิ่ม ลบ และอัปเดตสถานะเมนูอาหาร
-                    </div>
-                  </div>
+              {/* ── Header: ไม่มีปุ่มรีเฟรช ── */}
+              <div className="flex items-start gap-4">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
+                  <Soup className="h-7 w-7" />
                 </div>
-
-                <button
-                  onClick={() => void load()}
-                  disabled={loadingList}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-orange-600 shadow-sm transition hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  <RefreshCw
-                    className={`h-4 w-4 ${loadingList ? "animate-spin" : ""}`}
-                  />
-                  รีเฟรช
-                </button>
+                <div>
+                  <h1 className="text-3xl font-bold leading-tight">จัดการเมนู</h1>
+                  <p className="mt-1 text-sm text-orange-100">ร้าน #{restaurantId}</p>
+                </div>
               </div>
             </div>
           </div>
@@ -326,6 +306,7 @@ export default function OwnerMenuPage() {
             </div>
           )}
 
+          {/* ── Add menu form ── */}
           <form
             onSubmit={addMenu}
             className="mb-8 rounded-3xl border border-orange-100 bg-white p-5 shadow-sm"
@@ -335,23 +316,41 @@ export default function OwnerMenuPage() {
               เพิ่มเมนูใหม่
             </div>
 
-            <div className="grid gap-4">
-              <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
-                  ชื่อเมนู *
-                </label>
-                <input
-                  value={menuName}
-                  onChange={(e) => setMenuName(e.target.value)}
-                  placeholder="ชื่อเมนู"
-                  required
-                  disabled={loadingAdd}
-                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-gray-100"
-                />
+            <div className="grid gap-3">
+              {/* ชื่อเมนู + ราคา ในแถวเดียว */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1 block text-[11px] font-medium uppercase tracking-wide text-gray-400">
+                    ชื่อเมนู *
+                  </label>
+                  <input
+                    value={menuName}
+                    onChange={(e) => setMenuName(e.target.value)}
+                    placeholder="ชื่อเมนู"
+                    required
+                    disabled={loadingAdd}
+                    className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-gray-50"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-[11px] font-medium uppercase tracking-wide text-gray-400">
+                    ราคา (บาท)
+                  </label>
+                  <input
+                    type="number"
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                    placeholder="0"
+                    min={0}
+                    disabled={loadingAdd}
+                    className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-gray-50"
+                  />
+                </div>
               </div>
 
+              {/* รายละเอียด */}
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
+                <label className="mb-1 block text-[11px] font-medium uppercase tracking-wide text-gray-400">
                   รายละเอียด
                 </label>
                 <input
@@ -359,27 +358,13 @@ export default function OwnerMenuPage() {
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="รายละเอียด (ไม่บังคับ)"
                   disabled={loadingAdd}
-                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-gray-100"
+                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-gray-50"
                 />
               </div>
 
+              {/* รูปเมนู */}
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
-                  ราคา (บาท)
-                </label>
-                <input
-                  type="number"
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
-                  placeholder="ราคา"
-                  min={0}
-                  disabled={loadingAdd}
-                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-gray-100"
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
+                <label className="mb-1 block text-[11px] font-medium uppercase tracking-wide text-gray-400">
                   รูปเมนู
                 </label>
                 <ImageDropUploader
@@ -392,7 +377,7 @@ export default function OwnerMenuPage() {
               <button
                 type="submit"
                 disabled={loadingAdd}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-orange-300"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-orange-300"
               >
                 <Plus className="h-4 w-4" />
                 {loadingAdd ? "กำลังเพิ่ม..." : "เพิ่มเมนู"}
@@ -468,43 +453,46 @@ export default function OwnerMenuPage() {
                               </p>
                             </>
                           ) : (
-                            <div className="rounded-2xl border border-orange-100 bg-orange-50/50 p-4">
+                            <div className="rounded-2xl border border-gray-100 bg-gray-50/60 p-4">
                               <div className="grid gap-3">
-                                <div>
-                                  <label className="mb-1 block text-sm font-medium text-gray-700">
-                                    ชื่อเมนู
-                                  </label>
-                                  <input
-                                    value={editMenuName}
-                                    onChange={(e) => setEditMenuName(e.target.value)}
-                                    disabled={isActioning}
-                                    className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
-                                  />
+                                {/* ชื่อเมนู + ราคา */}
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div>
+                                    <label className="mb-1 block text-[11px] font-medium uppercase tracking-wide text-gray-400">
+                                      ชื่อเมนู
+                                    </label>
+                                    <input
+                                      value={editMenuName}
+                                      onChange={(e) => setEditMenuName(e.target.value)}
+                                      disabled={isActioning}
+                                      className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100 disabled:bg-gray-50"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="mb-1 block text-[11px] font-medium uppercase tracking-wide text-gray-400">
+                                      ราคา (บาท)
+                                    </label>
+                                    <input
+                                      type="number"
+                                      min={0}
+                                      value={editPrice}
+                                      onChange={(e) => setEditPrice(e.target.value)}
+                                      disabled={isActioning}
+                                      className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100 disabled:bg-gray-50"
+                                    />
+                                  </div>
                                 </div>
 
+                                {/* รายละเอียด */}
                                 <div>
-                                  <label className="mb-1 block text-sm font-medium text-gray-700">
+                                  <label className="mb-1 block text-[11px] font-medium uppercase tracking-wide text-gray-400">
                                     รายละเอียด
                                   </label>
                                   <input
                                     value={editDescription}
                                     onChange={(e) => setEditDescription(e.target.value)}
                                     disabled={isActioning}
-                                    className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
-                                  />
-                                </div>
-
-                                <div>
-                                  <label className="mb-1 block text-sm font-medium text-gray-700">
-                                    ราคา (บาท)
-                                  </label>
-                                  <input
-                                    type="number"
-                                    min={0}
-                                    value={editPrice}
-                                    onChange={(e) => setEditPrice(e.target.value)}
-                                    disabled={isActioning}
-                                    className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
+                                    className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100 disabled:bg-gray-50"
                                   />
                                 </div>
                               </div>
